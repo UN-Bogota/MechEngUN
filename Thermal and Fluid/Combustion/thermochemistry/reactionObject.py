@@ -8,7 +8,7 @@ Created on Fri Feb 17 17:35:50 2023
 
 import numpy as np
 import kp 
-
+from scipy.optimize import fsolve
 
 class Reaction:
     
@@ -97,7 +97,7 @@ class Reaction:
         
         return self.Carbon, self.Hydrogen, self.Oxygen, self.Nitrogen
         
-    def getEquations(self, vars, T, P = 101.325):
+    def getEquations(self, vars, T=1000, P = 101.325):
         
         """
         Se usan las 4 ecuaciones de balance de masa y 4 de equilibrio para 
@@ -152,6 +152,8 @@ class Reaction:
         return [C_balance, H_balance, O_balance, N_balance, 
                 eqn1, eqn2, eqn3, eqn4, eqn5, eqn6, eqn7, eqn8]
         
+    def solveSystem(self, CI):
+        B, C, D, E, F, G, H, I, J, K, L, M =  fsolve(self.getEquations, CI)
         
-        
+        return B, C, D, E, F, G, H, I, J, K, L, M
         

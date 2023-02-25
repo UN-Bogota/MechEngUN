@@ -27,6 +27,6 @@ def kp_values(temp):
     kp_val = []
 
     for i in reactions:
-        kp_val.append(log10_kp(i, temp))
-
+        kp = log10_kp(i, temp)
+        kp_val.append(np.power(10, kp))
     return kp_val

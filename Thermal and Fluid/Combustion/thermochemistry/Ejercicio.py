@@ -20,3 +20,7 @@ phi = 0.9
 metanoReac.addFuelSpecies(methane)
 metanoReac.addPhi(phi)
 
+
+CI = [1, 1, 2, 1, 0.1, 0.1, 1, 8, 1, 1, 1, 1]
+
+metanoReac.solveSystem(CI)

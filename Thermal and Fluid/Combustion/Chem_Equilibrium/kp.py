@@ -1,6 +1,30 @@
 import numpy as np
 
 def log10_kp(name, temp):
+    """
+    This function returns the equilibrium constant, Kp, for a given reaction 
+    and temperature using experimental data. The experimental data is stored 
+    in a dictionary containing temperature values and corresponding 
+    equilibrium constants for several reactions. 
+    The function first retrieves the experimental data for the specified 
+    reaction and then interpolates the equilibrium constant at the given 
+    temperature using numpy's interp function. 
+    The resulting log10(Kp) value is returned.
+
+    Parameters
+    ----------
+    name (str): 
+        The name of the reaction for which the equilibrium constant is to be calculated.
+    temp (float): 
+        The temperature (in K) at which the equilibrium constant is to be calculated.
+
+    Returns
+    -------
+    y_interp : float 
+    The log10(Kp) value for the specified reaction at the given temperature.
+
+    """
+    
     cte_data = {
         'temp': np.concatenate(([298, 500, 1000, 1200], np.arange(1600, 3600, 100))),
         'H2_to_2H': np.array([-71.224, -40.316, -17.292, -13.414, -8.532, -7.666, -6.896, -6.204, -5.580, -5.016, -4.502, -4.032, -3.600, -3.202, -2.836, -2.494, -2.178, -1.882, -1.606, -1.348, -1.106, -0.878, -0.664, -0.462]),
@@ -29,4 +53,5 @@ def kp_values(temp):
     for i in reactions:
         kp = log10_kp(i, temp)
         kp_val.append(np.power(10, kp))
+        
     return kp_val

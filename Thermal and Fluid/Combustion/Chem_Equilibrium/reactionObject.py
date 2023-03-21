@@ -13,8 +13,69 @@ from scipy.optimize import fsolve
 class Reaction:
     
     
+    """
+        The Reaction class defines the object for the chemical reaction of combustion.
+        The object has methods to calculate the coefficients for the balanced equation, 
+        and to calculate the mole fractions and mass fractions of the products.
+        
+        Attributes:
+        -----------
+        n_entrada : numpy array
+            Number of moles of each fuel species.
+        comp_entrada : numpy array
+            Composition of each fuel species in terms of the elements C, H, O, and N.
+        n_salida_est : numpy array
+            Number of moles of each product species as determined by stoichiometry.
+        comp_salida_est : numpy array
+            Composition of each product species as determined by stoichiometry.
+        n_salida_real : numpy array
+            Number of moles of each product species as determined experimentally.
+        comp_salida_real : numpy array
+            Composition of each product species as determined experimentally.
+        A_real : float
+            The real stoichiometric coefficient.
+        A_est : float
+            The estimated stoichiometric coefficient.
+        phi : float
+            The fuel-to-air equivalence ratio.
+        Carbon : float
+            The total number of carbon atoms in the fuel.
+        Hydrogen : float
+            The total number of hydrogen atoms in the fuel.
+        Oxygen : float
+            The total number of oxygen atoms in the fuel.
+        Nitrogen : float
+            The total number of nitrogen atoms in the fuel.
+        
+        Methods:
+        --------
+        addPhi(phi: float)
+            Adds the equivalence ratio to the Reaction object.
+        addFuelSpecies(comp_entrada_i: list, n_i: int = 1)
+            Adds a new fuel species to the Reaction object.
+        getTotalFuelElements()
+            Calculates the total number of each element in the fuel.
+        getA_est()
+            Calculates the estimated stoichiometric coefficient.
+        getA_real()
+            Calculates the real stoichiometric coefficient.
+        getTotalReacRealElements()
+            Calculates the total number of each element in the products.
+        getEquations(vars: list, T: float = 1000, P: float = 101.325)
+            Calculates the coefficients for the balanced equation.
+    """
+    
     def __init__(self):
         
+        C_molarMass = 12.0107 # kg/kmol
+        H_molarMass = 1.00794 # kg/kmol
+        O_molarMass = 15.9994 # kg/kmol
+        N_molarMass = 14.0067 # kg/kmol
+        
+        genMolarWeight = np.array([C_molarMass, H_molarMass, O_molarMass, N_molarMass])
+        
+        self.genMolarWeight = genMolarWeight.transpose() # general CHON molar weight
+                
         # Parametros de entrada para crear el objeto
         self.n_entrada = np.array([])
         self.comp_entrada = np.array([[0, 0, 0, 0]])
@@ -46,10 +107,10 @@ class Reaction:
         self.A_est = 1
         self.phi = self.A_est/self.A_real
         
-        self.Carbon = 0
-        self.Hydrogen = 0
-        self.Oxygen = 0 
-        self.Nitrogen = 0
+        self.Carbon = None
+        self.Hydrogen = None
+        self.Oxygen = None
+        self.Nitrogen = None
         
     def addPhi(self, phi):
         self.phi = phi
@@ -97,10 +158,10 @@ class Reaction:
         
         return self.Carbon, self.Hydrogen, self.Oxygen, self.Nitrogen
         
-    def getEquations(self, vars, T=1000, P = 101.325):
+    def getEquations(self, vars, T = 2000, P = 101.325):
         
         """
-        Se usan las 4 ecuaciones de balance de masa y 4 de equilibrio para 
+        Se usan las 4 ecuaciones de balance de masa y 8 de equilibrio para 
         encontrar cada coeficiente, los coeficientes corresponden a:
                     
             B: CO2
@@ -124,7 +185,7 @@ class Reaction:
         f = (P/101.325)/n
         
         # Todas se igualan a 0
-        if self.Carbon == 0:
+        if self.Carbon == None:
             self.getTotalReacRealElements()
             
         C_balance = B + C + 3*J - self.Carbon
@@ -140,20 +201,39 @@ class Reaction:
         
         eqn1 = (K**2) * f - kp_list[0]*E # H2_to_2H
         eqn2 = L**2 * f - kp_list[1]*G # O2_to_2O
-        eqn3 = M**2 *f - kp_list[2]*H  # N2_to_2N
-        eqn4 = I**2 - kp_list[3]**2 *(G*H) #  O2-N2_to_NO
-        eqn5 = G*F**2*f - (kp_list[4]*D)**2
-        eqn6 = F**2 * E * f - (kp_list[5]*D)**2
-        eqn7 = C**2 * G * f - (kp_list[6]*B)**2
-        eqn8 = C*D/(E*B)
-        
-        
-        
+        eqn3 = M**2 * f - kp_list[2]*H  # N2_to_2N
+        eqn4 = I**2 - kp_list[3]**2 * (G*H) #  O2-N2_to_NO
+        eqn5 = G * E**2 * f - (kp_list[4]*D)**2 # -- H2O_to_H2-O2
+        eqn6 = F**2 * E * f - (kp_list[5]*D)**2 # H2O_to_OH-H2
+        eqn7 = C**2 * G * f - (kp_list[6]*B)**2 # CO2_to_CO-O2
+        eqn8 = C*D - (E*B)*kp_list[7] # CO2-H2_to_CO-H2O
+                
         return [C_balance, H_balance, O_balance, N_balance, 
                 eqn1, eqn2, eqn3, eqn4, eqn5, eqn6, eqn7, eqn8]
         
     def solveSystem(self, CI):
-        B, C, D, E, F, G, H, I, J, K, L, M =  fsolve(self.getEquations, CI)
         
-        return B, C, D, E, F, G, H, I, J, K, L, M
+        B, C, D, E, F, G, H, I, J, K, L, M =  fsolve(self.getEquations, CI)
+        self.n_salida_real = [B, C, D, E, F, G, H, I, J, K, L, M]
+        
+        return self.n_salida_real
+    
+    def getReactmass(self):
+        
+        fuelMAss = np.matmul(self.n_entrada, (np.matmul(self.comp_entrada, 
+                                                        self.genMolarWeight))) #kgFuel
+        
+        air = np.array([0, 0, self.A_real*0.21*2, self.A_real*0.79*2])
+        airMass = np.matmul(air, self.genMolarWeight)
+        totalReacMass = fuelMAss + airMass
+        
+        return totalReacMass
+    
+    def getProdMass(self):
+        
+        prodMAss = np.matmul(self.n_salida_real, (np.matmul(self.comp_salida_real, 
+                                                        self.genMolarWeight))) #kgFuel
+        
+        return prodMAss
+        
         

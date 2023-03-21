@@ -6,7 +6,7 @@ This is a temporary script file.
 """
 import numpy as np
 from scipy.optimize import fsolve
-
+#from scipy.interpolate import spline
 import ThProperties as Th
 from matplotlib import pyplot as plt
 import properties as prop
@@ -49,14 +49,14 @@ comp_salida_real = np.array([[1, 0, 2, 0],
                              [0, 0, 0, 2],
                              [0, 0, 1, 1]])
 phi = 1.2
-com = n_entrada@comp_entrada
-com_st = np.linalg.solve(comp_salida_est.T, com)
-A_st = com_st[3]
-A_r = A_st/phi
-C_coef = com[0]
-H_coef = com[1]
-O_coef = com[2]+A_r*0.42
-N_coef = com[3]+A_r*0.79*2
+com=n_entrada@comp_entrada
+com_st=np.linalg.solve(comp_salida_est.T,com) #CO2 H2O N2 A_st
+A_st=com_st[3]
+A_r=A_st/phi
+C_coef=com[0]
+H_coef=com[1]
+O_coef=com[2]+A_r*0.42
+N_coef=com[3]+A_r*0.79*2
 
 B = 0
 C = 0
@@ -145,7 +145,7 @@ def equations(p):
         h1: NO
         I1: N2
     """
-    f = (P/101.325) # Presión del sistema sobre la de referencia
+    f=(P/101.325) # Presión del sistema sobre la de referencia
     B1, c1, D1, e1, F1, G1, h1, I1 = p
     n = B1+c1+D1+e1+F1+G1+h1+I1# Moles totales en productos
     eqn1 = B1+c1-C_coef # Balance de carbonos
@@ -190,13 +190,10 @@ for i in T_produc:
 
 comp_matrix = np.delete(comp_matrix, 0, 0)        
 comp_matrix = abs(comp_matrix)
-
 h_com_reac = np.dot(n_entrada, prop.hf_reactivos())
-
                   #   [T, P, h_com]
 h_com_pro = np.array([[0, 0, 0]])
 deltaH_pro = np.array([[0, 0, 0]])
-
 for i in range(len(comp_matrix)):
     h_com_i = np.dot(comp_matrix[i, 2:], prop.hf_productos())
     h_com_pro = np.append(h_com_pro, [[comp_matrix[i, 0], comp_matrix[i, 1],
@@ -211,7 +208,6 @@ deltaH_pro = np.delete(deltaH_pro, 0, 0)
 
 
 H_reac = h_com_reac
-
 H_pro = h_com_pro[:, 2] + deltaH_pro[:, 2]
 
 # Calor de combustion: 
@@ -246,14 +242,9 @@ T_adiabaticai = [np.mean(T_adiabatica), np.mean(T_adiabatica), np.mean(T_adiabat
 
 T_adiabatica_f = np.array([[0, 0, 0, 0, 0]])
 T_adiabatica_f = np.append(T_adiabatica_f, [T_adiabaticai], axis=0)
-
-
-
 epsilon = 1E-3
 delta = 100
 print(len(presion))
-
-
 while abs(delta) >= epsilon:
     comp_matrix_adia = np.array([[0, 0, 0, 0, 0, 0, 0, 0, 0, 0]])
 
@@ -292,6 +283,7 @@ print(T_adiabatica_f)
         
 plt.figure(1)
 plt.plot(presion, T_adiabatica_f[-1], 'ro')
+plt.plot(presion, T_adiabatica_f[-1], 'orange')
 plt.xlabel('Presion [kPa]')
 plt.ylabel('Temperatura de llama adiabatica [K]')
 plt.title('Temperatura de llama adiabatica para cada presión')
@@ -301,26 +293,54 @@ plt.show()
 xlist = presion #Vector de valores x
 ylist = T_produc#vector de valores y
 X, Y = np.meshgrid(xlist, ylist)#Crea la malla x-y
+comp=np.ones([len(xlist),len(ylist),8])
+contador=0
+for j in range(len(ylist)):
+    for i in range(len(xlist)):
+        for k in range(8):
+            comp[i,j,k]=comp_matrix[contador,k+2]
+        contador+=1
+print(comp[:,:,0])
 
-
-
-"""
-for i in range(8):
-    Z = # valor de composición
+especie=['CO2','CO','H2O','H2','OH','O2','NO','N2']
+kc=0
+for i in especie:
+    Z =comp[:,:,kc].T
     #print(Z)
 
     fig,ax=plt.subplots(1,1)
-    cp = ax.contourf(X, Y, Z)
+    cp = ax.contourf(X, Y, Z,100)
     fig.colorbar(cp) # Add a colorbar to a plot
        
     #plt.grid(linewidth=1.5,color='k')
     #ax.set_title('Filled Contours Plot')
-    ax.set_xlabel('x [m]')
-    ax.set_ylabel('y [m]')
-    ax.set_title('Temperature contours for '+str(self.nx*self.ny)+' cells')
+    ax.set_xlabel('Presión [kPa]')
+    ax.set_ylabel('Temperatura [K]')
+    ax.set_title('Mapa de generación de '+ i + ' [mol/mol de combustble]' )
     plt.show()
-figure(2)
-"""
+    kc+=1
+
+plt.figure(3)
+Z1=eficiencia_com.reshape((4,5))
+fig,ax=plt.subplots(1,1)
+cp = ax.contourf(X, Y, Z1,100)
+fig.colorbar(cp)
+ax.set_xlabel('Presión [kPa]')
+ax.set_ylabel('Temperatura [K]')
+ax.set_title('Mapa de eficiencia de combustión' )
+plt.show()
+
+plt.figure(4)
+Z1=Q_com.reshape((4,5))
+fig,ax=plt.subplots(1,1)
+cp = ax.contourf(X, Y, Z1,100)
+fig.colorbar(cp)
+ax.set_xlabel('Presión [kPa]')
+ax.set_ylabel('Temperatura [K]')
+ax.set_title('Mapa de calor obtenido de la combustión' )
+plt.show()
+# figure(2)
+
         
 #     T_adiabatica = np.array([])
 #     for i in range(len(result)):

@@ -50,9 +50,9 @@ def k_values(T):
         reverse = constants.get(key)[1]
         
         kf = forward[0]*(T**forward[1])*math.exp(-forward[2]/(Ru*T))
-        Kr = reverse[0]*(T**reverse[1])*math.exp(-reverse[2]/(Ru*T))
+        kr = reverse[0]*(T**reverse[1])*math.exp(-reverse[2]/(Ru*T))
         
-        K[int(key)-1] = [kf,Kr]
+        K[int(key)-1] = [kf,kr]
         
     return K
 

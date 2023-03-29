@@ -78,6 +78,7 @@ metanoReac = Reaction()
 
 # Se definen las especies del combustible
 methane = [1, 4, 0, 0]
+hydrogen = [0, 2, 0, 0]
 phi = 0.9
 metanoReac.addFuelSpecies(methane)
 

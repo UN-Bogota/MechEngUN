@@ -54,11 +54,22 @@ def k_values(T):
         
     return K
 
-correction = {
-    '5': np.array([2.5, 12.0]),
-    '6': np.array([2.5, 12.0]),
-    '7': np.array([2.5, 12.0]),
-    '8': np.array([0.73, 12.0]),
-    '9': np.array([1.3, 14.0]),
-    '16': np.array([2.5, 12.0]),
-    }
+def get_ef():
+    correction = {
+        '5': np.array([2.5, 12.0]),
+        '6': np.array([2.5, 12.0]),
+        '7': np.array([2.5, 12.0]),
+        '8': np.array([0.73, 12.0]),
+        '9': np.array([1.3, 14.0]),
+        '15': np.array([2.5, 12.0]),
+        }
+    
+    A = np.ones((6, 9))
+    i = 0
+    for key in correction:
+        
+        A[i,1] = correction[key][0]
+        A[i,5] = correction[key][1]
+        i += 1
+    
+    return A

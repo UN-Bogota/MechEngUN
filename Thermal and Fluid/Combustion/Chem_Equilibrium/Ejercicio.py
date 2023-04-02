@@ -12,32 +12,32 @@ from reactionObject import Reaction
 
 def genInitCon():
     
-    """
-    Se usan las 4 ecuaciones de balance de masa y 8 de equilibrio para 
-    encontrar cada coeficiente, los coeficientes corresponden a:
-                
-        B: CO2
-        C: CO
-        D: H2O
-        E: H2
-        F: OH
-        G: O2
-        H: N2
-        I: NO
-        J: C3H8
-        K: H
-        L: O
-        M: N
-        falta el NO2
-    """
-    #random.seed(10)
+    #random.seed(10, CO H2O, H2, OH, O2, N2, NO, C3H8, H, O, N)
     n = random.random()*10
-    
+    # CI = [CO2]
     CI = [0.4*n, 0.01*n, 0.45*n, 0.1*n, 0.02*n, 0.1*n, 0.7*n, 0.1*n,
           0.001*n, 0.01*n, 0.1*n, 0.01*n]
     return CI
 
-def findSolution(reaction, epsilon = 1E-6):
+def findSolution(reaction, solveWithEnergy, epsilon = 1E-6):
+    """
+     Function thats verify both the positive of all concentrations
+     and the preservation of mass conservation.
+
+    Parameters
+    ----------
+    reaction : Object 
+        DESCRIPTION.
+    epsilon : value of convergence
+        DESCRIPTION. The default is 1E-6.
+
+    Returns
+    -------
+    TYPE
+        The concentrations at equilibrium state
+
+    """
+    
     
     deltaMass = 1
     noNegativity = False
@@ -47,7 +47,7 @@ def findSolution(reaction, epsilon = 1E-6):
     while (not noNegativity) and  abs(deltaMass) >= epsilon :
        
         CI = genInitCon()
-        sol_i = reaction.solveSystem(CI)
+        sol_i = reaction.solveSystem(CI, solveWithEnergy)
         deltaMass = reaction.getReactmass() - reaction.getProdMass()
         count = True
         
@@ -78,12 +78,16 @@ metanoReac = Reaction()
 
 # Se definen las especies del combustible
 methane = [1, 4, 0, 0]
+methane_name = 'CH4'
+
 hydrogen = [0, 2, 0, 0]
+
 phi = 0.9
-metanoReac.addFuelSpecies(methane)
+metanoReac.addFuelSpecies(methane, methane_name)
 
 metanoReac.addPhi(phi)
 
-sol = findSolution(metanoReac)
+solveWithEnergy = True
+sol = findSolution(metanoReac, solveWithEnergy)
 print(sol)
 

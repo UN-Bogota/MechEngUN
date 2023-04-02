@@ -168,6 +168,7 @@ T_produc = np.arange(1000, 3000, 500)
 
                        # T  P n1 n2 n3 n4 n5 n6 n7 n8
 comp_matrix = np.array([[0, 0, 0, 0, 0, 0, 0, 0, 0, 0]])
+
 for i in T_produc: 
     for j in presion:
         T = i
@@ -194,6 +195,7 @@ h_com_reac = np.dot(n_entrada, prop.hf_reactivos())
                   #   [T, P, h_com]
 h_com_pro = np.array([[0, 0, 0]])
 deltaH_pro = np.array([[0, 0, 0]])
+
 for i in range(len(comp_matrix)):
     h_com_i = np.dot(comp_matrix[i, 2:], prop.hf_productos())
     h_com_pro = np.append(h_com_pro, [[comp_matrix[i, 0], comp_matrix[i, 1],
@@ -212,7 +214,7 @@ H_pro = h_com_pro[:, 2] + deltaH_pro[:, 2]
 
 # Calor de combustion: 
 Q_com = H_pro - H_reac
-
+# --------------------------------------------------------------------------------
 
 LHV = h_com_pro[:, 2] - h_com_reac
 

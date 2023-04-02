@@ -9,7 +9,7 @@ Created on Fri Feb 17 17:35:50 2023
 import numpy as np
 import kp 
 from scipy.optimize import fsolve
-
+import properties as prop
 class Reaction:
     
     
@@ -111,18 +111,24 @@ class Reaction:
         self.Hydrogen = None
         self.Oxygen = None
         self.Nitrogen = None
+        self.reactNames = []
+        self.productNames = ['CO2', 'CO', 'H2O', 'H2', 'OH', 'O2', 'N2', 'NO', 'C3H8', 'H', 'O', 'N']
         
     def addPhi(self, phi):
         self.phi = phi
     
-    def addFuelSpecies(self, comp_entrada_i, n_i = 1):
+    def addProductSpecies(self, names):
+        self.productNames = self.productNames + names
+        
+    def addFuelSpecies(self, comp_entrada_i, name, n_i = 1):
         
         self.n_entrada = np.append(self.n_entrada , n_i)
         self.comp_entrada = np.append(self.comp_entrada , [comp_entrada_i], axis = 0)
+        self.reactNames.append(name)
         
         if all(self.comp_entrada[0] == np.array([0, 0, 0, 0])): 
             self.comp_entrada = np.delete(self.comp_entrada, 0, 0)
-            
+           
     def getTotalFuelElements(self):
         Carbon = 0
         Hydrogen = 0
@@ -158,7 +164,17 @@ class Reaction:
         
         return self.Carbon, self.Hydrogen, self.Oxygen, self.Nitrogen
         
-    def getEquations(self, vars, T = 2000, P = 101.325):
+    def getVarsE(vars):
+        
+        B, C, D, E, F, G, H, I, J, K, L, M, T = vars
+        return B, C, D, E, F, G, H, I, J, K, L, M, T
+       
+    def getVars(vars):
+        
+        B, C, D, E, F, G, H, I, J, K, L, M = vars
+        return B, C, D, E, F, G, H, I, J, K, L, M
+        
+    def getEquations(self, vars, solveWithEnergy = True, P = 101.325, Patm = 101.325):
         
         """
         Se usan las 4 ecuaciones de balance de masa y 8 de equilibrio para 
@@ -178,26 +194,35 @@ class Reaction:
             M: N
             falta el NO2
         """
+        if solveWithEnergy:
+            B, C, D, E, F, G, H, I, J, K, L, M, T = vars
+        else:
+            B, C, D, E, F, G, H, I, J, K, L, M = vars
+            
+        n = B + C + D + E + F + G + H + I + J + K + L + M  
+        f = (P/Patm)/n
         
-        B, C, D, E, F, G, H, I, J, K, L, M = vars
-        n = B + C + D + E + F + G + H + I + J + K + L + M 
-        
-        f = (P/101.325)/n
-        
-        # Todas se igualan a 0
         if self.Carbon == None:
             self.getTotalReacRealElements()
-            
+        
+        # Todas se igualan a 0
+        
+        # Mass balance:
         C_balance = B + C + 3*J - self.Carbon
         H_balance = 2*D + 2*E + F + 8*J + K - self.Hydrogen
         O_balance = 2*B + C + D + F + 2*G + I + L - self.Oxygen 
         N_balance = 2*H + I + M - self.Nitrogen
         
+        # There are all the ecuations names, please select all that apply.
         
         # ['H2_to_2H', 'O2_to_2O', 'N2_to_2N', 'O2-N2_to_NO', 'H2O_to_H2-O2', 
         #  'H2O_to_OH-H2', 'CO2_to_CO-O2','CO2-H2_to_CO-H2O']
         
         kp_list = kp.kp_values(T)
+        
+        
+        # Equilibrium equations
+        
         
         eqn1 = (K**2) * f - kp_list[0]*E # H2_to_2H
         eqn2 = L**2 * f - kp_list[1]*G # O2_to_2O
@@ -207,13 +232,43 @@ class Reaction:
         eqn6 = F**2 * E * f - (kp_list[5]*D)**2 # H2O_to_OH-H2
         eqn7 = C**2 * G * f - (kp_list[6]*B)**2 # CO2_to_CO-O2
         eqn8 = C*D - (E*B)*kp_list[7] # CO2-H2_to_CO-H2O
+        
+        # Energy equations
+        
+        if solveWithEnergy == True:
+            
+            n_salida = np.array([B, C, D, E, F, G, H, I, J, K, L, M])
+            
+            h_com_reac = np.dot(self.n_entrada, prop.hf_reactivos(self.reactNames))
+            h_com_pro = np.dot(n_salida, prop.hf_productos(self.productNames))
+            
+            # Falta agregarle el delta de entalpía a los reactivos para cuando ingresan al 
+            # reactor a una T diferente a t ambiente.
+        
+            # The left hand side:
                 
-        return [C_balance, H_balance, O_balance, N_balance, 
-                eqn1, eqn2, eqn3, eqn4, eqn5, eqn6, eqn7, eqn8]
+            LHS = (h_com_reac - h_com_pro)
+            
+            # El termino de calbio de la entalpía prod por la deferencia de T:
+            
+            deltaH_pro = np.dot(n_salida, prop.deltaH(T, self.productNames))
+            
+            energyEq = LHS - deltaH_pro
+            
+            return [C_balance, H_balance, O_balance, N_balance, 
+                    eqn1, eqn2, eqn3, eqn4, eqn5, eqn6, eqn7, eqn8, energyEq]
+        else:
+            return [C_balance, H_balance, O_balance, N_balance, 
+                    eqn1, eqn2, eqn3, eqn4, eqn5, eqn6, eqn7, eqn8]
         
-    def solveSystem(self, CI):
+    def solveSystem(self, CI, solveWithEnergy = False):
         
-        B, C, D, E, F, G, H, I, J, K, L, M =  fsolve(self.getEquations, CI)
+        if solveWithEnergy:
+            B, C, D, E, F, G, H, I, J, K, L, M, T =  fsolve(self.getEquations(), CI)
+        
+        else:
+            B, C, D, E, F, G, H, I, J, K, L, M =  fsolve(self.getEquations(), CI)
+        
         self.n_salida_real = [B, C, D, E, F, G, H, I, J, K, L, M]
         
         return self.n_salida_real
@@ -235,5 +290,6 @@ class Reaction:
                                                         self.genMolarWeight))) #kgFuel
         
         return prodMAss
+        
         
         

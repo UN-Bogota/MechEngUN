@@ -10,14 +10,31 @@ import random
 
 from reactionObject import Reaction
 
-def genInitCon():
+def genInitCon(solveWithEnergy = False):
     
     #random.seed(10, CO H2O, H2, OH, O2, N2, NO, C3H8, H, O, N)
     n = random.random()*10
     # CI = [CO2]
-    CI = [0.4*n, 0.01*n, 0.45*n, 0.1*n, 0.02*n, 0.1*n, 0.7*n, 0.1*n,
-          0.001*n, 0.01*n, 0.1*n, 0.01*n]
+    #CI = [0.4*n, 0.01*n, 0.45*n, 0.1*n, 0.02*n, 0.1*n, 0.7*n, 0.1*n,
+    #      0.001*n, 0.01*n, 0.1*n, 0.01*n]
+    
+    if solveWithEnergy:
+        CI = [0.4*n, 0.01*n, 0.45*n, 0.1*n, 0.02*n, 0.1*n, 0.7*n, 0.1*n,
+              0.001*n, 0.01*n, 0.1*n, 0.01*n, 10*n]
+    
+    else:
+        CI = [0.4*n, 0.01*n, 0.45*n, 0.1*n, 0.02*n, 0.1*n, 0.7*n, 0.1*n,
+              0.001*n, 0.01*n, 0.1*n, 0.01*n]
     return CI
+
+def molarProdFrac(products):
+    
+    molarProdFrac = []
+    N_tot = sum(products)
+    
+    for i in products:
+        molarProdFrac.append(i/N_tot)
+    return molarProdFrac
 
 def findSolution(reaction, solveWithEnergy, epsilon = 1E-6):
     """
@@ -38,7 +55,6 @@ def findSolution(reaction, solveWithEnergy, epsilon = 1E-6):
 
     """
     
-    
     deltaMass = 1
     noNegativity = False
     
@@ -46,7 +62,7 @@ def findSolution(reaction, solveWithEnergy, epsilon = 1E-6):
     
     while (not noNegativity) and  abs(deltaMass) >= epsilon :
        
-        CI = genInitCon()
+        CI = genInitCon(solveWithEnergy)
         sol_i = reaction.solveSystem(CI, solveWithEnergy)
         deltaMass = reaction.getReactmass() - reaction.getProdMass()
         count = True
@@ -65,14 +81,6 @@ def findSolution(reaction, solveWithEnergy, epsilon = 1E-6):
     else:
         return findSolution(reaction)
 
-def molarProdFrac(products):
-    
-    molarProdFrac = []
-    N_tot = sum(products)
-    for i in products:
-        molarProdFrac.append(i/N_tot)
-    return molarProdFrac
-
 # Creo el objeto
 metanoReac = Reaction()
 
@@ -90,4 +98,3 @@ metanoReac.addPhi(phi)
 solveWithEnergy = True
 sol = findSolution(metanoReac, solveWithEnergy)
 print(sol)
-

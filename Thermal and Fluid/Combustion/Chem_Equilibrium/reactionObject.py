@@ -10,6 +10,7 @@ import numpy as np
 import kp 
 from scipy.optimize import fsolve
 import properties as prop
+
 class Reaction:
     
     
@@ -164,17 +165,18 @@ class Reaction:
         
         return self.Carbon, self.Hydrogen, self.Oxygen, self.Nitrogen
         
-    def getVarsE(vars):
+    def getVarsE(vars): # No entiendo para que es esta funcion
         
         B, C, D, E, F, G, H, I, J, K, L, M, T = vars
         return B, C, D, E, F, G, H, I, J, K, L, M, T
        
-    def getVars(vars):
+    def getVars(vars):  # No entiendo para que es esta funcion
         
         B, C, D, E, F, G, H, I, J, K, L, M = vars
         return B, C, D, E, F, G, H, I, J, K, L, M
         
-    def getEquations(self, vars, solveWithEnergy = True, P = 101.325, Patm = 101.325):
+    #def getEquations(self, vars, solveWithEnergy = True, P = 101.325, Patm = 101.325):
+    def getEquations(self, CI, solveWithEnergy = True, P = 101.325, Patm = 101.325):
         
         """
         Se usan las 4 ecuaciones de balance de masa y 8 de equilibrio para 
@@ -194,11 +196,12 @@ class Reaction:
             M: N
             falta el NO2
         """
+        
         if solveWithEnergy:
-            B, C, D, E, F, G, H, I, J, K, L, M, T = vars
+            B, C, D, E, F, G, H, I, J, K, L, M, T = CI
         else:
-            B, C, D, E, F, G, H, I, J, K, L, M = vars
-            
+            B, C, D, E, F, G, H, I, J, K, L, M = CI
+        
         n = B + C + D + E + F + G + H + I + J + K + L + M  
         f = (P/Patm)/n
         
@@ -222,7 +225,6 @@ class Reaction:
         
         
         # Equilibrium equations
-        
         
         eqn1 = (K**2) * f - kp_list[0]*E # H2_to_2H
         eqn2 = L**2 * f - kp_list[1]*G # O2_to_2O
@@ -264,12 +266,12 @@ class Reaction:
     def solveSystem(self, CI, solveWithEnergy = False):
         
         if solveWithEnergy:
-            B, C, D, E, F, G, H, I, J, K, L, M, T =  fsolve(self.getEquations(), CI)
-        
+            B, C, D, E, F, G, H, I, J, K, L, M, T =  fsolve(self.getEquations(CI), CI)
+            self.n_salida_real = [B, C, D, E, F, G, H, I, J, K, L, M, T]
+            
         else:
-            B, C, D, E, F, G, H, I, J, K, L, M =  fsolve(self.getEquations(), CI)
-        
-        self.n_salida_real = [B, C, D, E, F, G, H, I, J, K, L, M]
+            B, C, D, E, F, G, H, I, J, K, L, M =  fsolve(self.getEquations(CI), CI)
+            self.n_salida_real = [B, C, D, E, F, G, H, I, J, K, L, M]
         
         return self.n_salida_real
     
@@ -288,7 +290,6 @@ class Reaction:
         
         prodMAss = np.matmul(self.n_salida_real, (np.matmul(self.comp_salida_real, 
                                                         self.genMolarWeight))) #kgFuel
-        
         return prodMAss
         
         

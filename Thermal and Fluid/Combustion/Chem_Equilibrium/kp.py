@@ -44,10 +44,12 @@ def log10_kp(name, temp):
     
     return y_interp
 
-def kp_values(temp):
-
-    reactions = ['H2_to_2H', 'O2_to_2O', 'N2_to_2N', 'O2-N2_to_NO', 'H2O_to_H2-O2', 'H2O_to_OH-H2', 'CO2_to_CO-O2',
-                 'CO2-H2_to_CO-H2O']
+def kp_values(temp, reactions = []):
+    
+    if len(reactions) == 0:
+        reactions = ['H2_to_2H', 'O2_to_2O', 'N2_to_2N', 'O2-N2_to_NO', 'H2O_to_H2-O2', 'H2O_to_OH-H2', 'CO2_to_CO-O2',
+                     'CO2-H2_to_CO-H2O']
+    
     kp_val = []
 
     for i in reactions:

@@ -10,11 +10,11 @@ import numpy as np
 
 
 def cal_property(T, name, prop):
-
+    print('Esto es T: ', T)
     if 290 <= T <= 1000:
         if name == 'CO':
-            h_est = 8669.0
-            h_form = -110530.0
+            # h_est = 8669.0
+            # h_form = -110530.0
             a1 = 0.03262451E+02
             a2 = 0.15119409E-02
             a3 = -0.03881755E-04
@@ -23,8 +23,8 @@ def cal_property(T, name, prop):
             a6 = -0.14310539E+05
             a7 = 0.04848897E+02
         elif name == 'CO2':
-            h_est = 9364.0
-            h_form = -393520.0
+            # h_est = 9364.0
+            # h_form = -393520.0
             """
             a1 = 0.24007797E+01
             a2 = 0.87350957E-02
@@ -42,8 +42,8 @@ def cal_property(T, name, prop):
             a6 = -0.04837314E+06
             a7 = 0.10188488E+02
         elif name == 'H2':
-            h_est = 8468.0
-            h_form = 0.0
+            # h_est = 8468.0
+            # h_form = 0.0
             a1 = 0.03298124E+02
             a2 = 0.08249441E-02
             a3 = -0.08143015E-05
@@ -52,7 +52,7 @@ def cal_property(T, name, prop):
             a6 = -0.10125209E+04
             a7 = -0.03294094E+02
         elif name == 'H':
-            h_form = 218000.0
+            # h_form = 218000.0
             a1 = 0.02500000E+02
             a2 = 0.00000000E+00
             a3 = 0.00000000E+00
@@ -61,8 +61,8 @@ def cal_property(T, name, prop):
             a6 = 0.02547162E+06
             a7 = -0.04601176E+01
         elif name == 'OH':
-            h_form = 39460.0
-            h_est = 9188.0
+            # h_form = 39460.0
+            # h_est = 9188.0
             a1 = 0.03637266E+02
             a2 = 0.01850910E-02
             a3 = -0.16761646E-05
@@ -71,8 +71,8 @@ def cal_property(T, name, prop):
             a6 = 0.03606781E+05
             a7 = 0.13588605E+01
         elif name == 'H2O':
-            h_est = 9904.0
-            h_form = -241820.0
+            # h_est = 9904.0
+            # h_form = -241820.0
             a1 = 0.03386842E+02
             a2 = 0.03474982E-01
             a3 = -0.06354696E-04
@@ -81,8 +81,8 @@ def cal_property(T, name, prop):
             a6 = -0.03020811E+06
             a7 = 0.02590232E+02
         elif name == 'N2':
-            h_form = 0.0
-            h_est = 8669.0
+            # h_form = 0.0
+            # h_est = 8669.0
             a1 = 0.03298677E+02
             a2 = 0.14082404E-02
             a3 = -0.03963222E-04
@@ -91,8 +91,8 @@ def cal_property(T, name, prop):
             a6 = -0.10208999E+04
             a7 = 0.03950372E+02
         elif name == 'N':
-            h_form = 472680.0
-            h_est = 8669.0
+            # h_form = 472680.0
+            # h_est = 8669.0
             a1 = 0.02503071E+02
             a2 = -0.02180018E-03
             a3 = 0.05420529E-06
@@ -101,7 +101,7 @@ def cal_property(T, name, prop):
             a6 = 0.05609890E+06
             a7 = 0.04167566E+02
         elif name == 'NO':
-            h_form = 88850.0  # Verificar
+            # h_form = 88850.0  # Verificar
             a1 = 0.03376541E+02
             a2 = 0.12530634E-02
             a3 = -0.03302750E-04
@@ -110,7 +110,7 @@ def cal_property(T, name, prop):
             a6 = 0.09817961E+05
             a7 = 0.05829590E+02
         elif name == 'NO2':
-            h_form = 55565.0  # verificar
+            # h_form = 55565.0  # verificar
             a1 = 0.02670600E+02
             a2 = 0.07838500E-01
             a3 = -0.08063864E-04
@@ -119,8 +119,8 @@ def cal_property(T, name, prop):
             a6 = 0.02896290E+05
             a7 = 0.11612071E+02
         elif name == 'O2':
-            h_form = 0.0
-            h_est = 8682.0
+            # h_form = 0.0
+            # h_est = 8682.0
             a1 = 0.03212936E+02
             a2 = 0.11274864E-02
             a3 = -0.05756150E-05
@@ -129,8 +129,8 @@ def cal_property(T, name, prop):
             a6 = -0.10052490E+04
             a7 = 0.06034737E+02
         elif name == 'O':
-            h_form = 429170.0
-            h_est = 6852.0
+            # h_form = 429170.0
+            # h_est = 6852.0
             a1 = 0.02946428E+02
             a2 = -0.16381665E-02
             a3 = 0.02421031E-04
@@ -138,11 +138,21 @@ def cal_property(T, name, prop):
             a5 = 0.03890696E-11
             a6 = 0.02914764E+06
             a7 = 0.02963995E+02
+        elif name == 'C3H8':
+            # h_est = 0
+            # h_form = 0.0
+            a1 = 0
+            a2 = 0
+            a3 = 0
+            a4 = 0
+            a5 = 0
+            a6 = 0
+            a7 = 0
 
     if 1000 < T <= 5000:
         if name == 'CO':
-            h_est = 8669.0
-            h_form = -110530.0
+            # h_est = 8669.0
+            # h_form = -110530.0
             a1 = 0.03025078E+02
             a2 = 0.14426885E-02
             a3 = -0.05630827E-05
@@ -151,8 +161,8 @@ def cal_property(T, name, prop):
             a6 = -0.14268350E+05
             a7 = 0.06108217E+02
         elif name == 'CO2':
-            h_est = 9364.0
-            h_form = -393520.0
+            # h_est = 9364.0
+            # h_form = -393520.0
             a1 = 0.04453623E+02
             a2 = 0.03140168E-01
             a3 = -0.12784105E-05
@@ -161,8 +171,8 @@ def cal_property(T, name, prop):
             a6 = -0.04896696E+06
             a7 = -0.09553959E+01
         elif name == 'H2':
-            h_est = 8468.0
-            h_form = 0.0
+            # h_est = 8468.0
+            # h_form = 0.0
             a1 = 0.02991423E+02
             a2 = 0.07000644E-02
             a3 = -0.05633828E-06
@@ -171,7 +181,7 @@ def cal_property(T, name, prop):
             a6 = -0.08350340E+04
             a7 = -0.13551101E+01
         elif name == 'H':
-            h_form = 218000.0
+            # h_form = 218000.0
             a1 = 0.02500000E+02
             a2 = 0.00000000E+00
             a3 = 0.00000000E+00
@@ -180,8 +190,8 @@ def cal_property(T, name, prop):
             a6 = 0.02547162E+06
             a7 = -0.04601176E+01
         elif name == 'OH':
-            h_est = 9188.0
-            h_form = 39460.0
+            # h_est = 9188.0
+            # h_form = 39460.0
             a1 = 0.02882730E+02
             a2 = 0.10139743E-02
             a3 = -0.02276877E-05
@@ -190,8 +200,8 @@ def cal_property(T, name, prop):
             a6 = 0.03886888E+05
             a7 = 0.05595712E+02
         elif name == 'H2O':
-            h_est = 9904.0
-            h_form = -241820.0
+            # h_est = 9904.0
+            # h_form = -241820.0
             a1 = 0.02672145E+02
             a2 = 0.03056293E-01
             a3 = -0.08730260E-05
@@ -200,8 +210,8 @@ def cal_property(T, name, prop):
             a6 = -0.02989921E+06
             a7 = 0.06862817E+02
         elif name == 'N2':
-            h_est = 8669.0
-            h_form = 0.0
+            # h_est = 8669.0
+            # h_form = 0.0
             a1 = 0.02926640E+02
             a2 = 0.14879768E-02
             a3 = -0.05684760E-05
@@ -210,8 +220,8 @@ def cal_property(T, name, prop):
             a6 = -0.09227977E+04
             a7 = 0.05980528E+02
         elif name == 'N':
-            h_est = 8669.0
-            h_form = 472680.0
+            # h_est = 8669.0
+            # h_form = 472680.0
             a1 = 0.02450268E+02
             a2 = 0.10661458E-03
             a3 = -0.07465337E-06
@@ -220,7 +230,7 @@ def cal_property(T, name, prop):
             a6 = 0.05611604E+06
             a7 = 0.04448758E+02
         elif name == 'NO':
-            h_form = 88850.0  # Verificar
+            # h_form = 88850.0  # Verificar
             a1 = 0.03245435E+02
             a2 = 0.12691383E-02
             a3 = -0.05015890E-05
@@ -229,7 +239,7 @@ def cal_property(T, name, prop):
             a6 = 0.09800840E+05
             a7 = 0.06417293E+02
         elif name == 'NO2':
-            h_form = 55565.0  # verificar
+            # h_form = 55565.0  # verificar
             a1 = 0.04682859E+02
             a2 = 0.02462429E-01
             a3 = -0.10422585E-05
@@ -238,8 +248,6 @@ def cal_property(T, name, prop):
             a6 = 0.02261292E+05
             a7 = 0.09885985E+01
         elif name == 'O2':
-            h_form = 0.0
-            h_est = 8682.0
             a1 = 0.03697578E+02
             a2 = 0.06135197E-02
             a3 = -0.12588420E-06
@@ -248,8 +256,6 @@ def cal_property(T, name, prop):
             a6 = -0.12339301E+04
             a7 = 0.03189165E+02
         elif name == 'O':
-            h_form = 429170.0
-            h_est = 6852.0
             a1 = 0.02542059E+02
             a2 = -0.02755061E-03
             a3 = -0.03102803E-07
@@ -257,7 +263,16 @@ def cal_property(T, name, prop):
             a5 = -0.04368051E-14
             a6 = 0.02923080E+06
             a7 = 0.04920308E+02
-
+        elif name == 'C3H8':
+            a1 = 0
+            a2 = 0
+            a3 = 0
+            a4 = 0
+            a5 = 0
+            a6 = 0
+            a7 = 0
+    if T > 5000:
+        print('Se putea ----------')
     Ru = 8.31446261815324  # kJ/kmol K
     if prop == 'cp':
         cp = Ru * (a1 + a2*T + a3*T**2 + a4*T**3 + a5*T**4)

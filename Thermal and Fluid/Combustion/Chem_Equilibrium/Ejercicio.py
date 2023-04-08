@@ -20,7 +20,7 @@ def genInitCon(solveWithEnergy = False):
     
     if solveWithEnergy:
         CI = [0.4*n, 0.01*n, 0.45*n, 0.1*n, 0.02*n, 0.1*n, 0.7*n, 0.1*n,
-              0.001*n, 0.01*n, 0.1*n, 0.01*n, 10*n]
+              0.001*n, 0.01*n, 0.1*n, 0.01*n, 800]
     
     else:
         CI = [0.4*n, 0.01*n, 0.45*n, 0.1*n, 0.02*n, 0.1*n, 0.7*n, 0.1*n,
@@ -36,7 +36,7 @@ def molarProdFrac(products):
         molarProdFrac.append(i/N_tot)
     return molarProdFrac
 
-def findSolution(reaction, solveWithEnergy, epsilon = 1E-6):
+def findSolution(reaction, epsilon = 1E-6):
     """
      Function thats verify both the positive of all concentrations
      and the preservation of mass conservation.
@@ -61,13 +61,15 @@ def findSolution(reaction, solveWithEnergy, epsilon = 1E-6):
     sol = None
     
     while (not noNegativity) and  abs(deltaMass) >= epsilon :
-       
-        CI = genInitCon(solveWithEnergy)
-        sol_i = reaction.solveSystem(CI, solveWithEnergy)
+
+        CI = genInitCon(reaction.solveWithEnergy)
+        sol_i = reaction.solveSystem(CI)
+
         deltaMass = reaction.getReactmass() - reaction.getProdMass()
+        
         count = True
         
-        for i in sol_i:
+        for i in sol_i[0]:
             if i <= 0:
                 count = False
                 break
@@ -94,7 +96,7 @@ phi = 0.9
 metanoReac.addFuelSpecies(methane, methane_name)
 
 metanoReac.addPhi(phi)
+metanoReac.addFirstLaw(True)
 
-solveWithEnergy = True
-sol = findSolution(metanoReac, solveWithEnergy)
+sol = findSolution(metanoReac)
 print(sol)

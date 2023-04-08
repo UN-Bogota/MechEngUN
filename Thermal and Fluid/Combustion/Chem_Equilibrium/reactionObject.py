@@ -114,6 +114,8 @@ class Reaction:
         self.Nitrogen = None
         self.reactNames = []
         self.productNames = ['CO2', 'CO', 'H2O', 'H2', 'OH', 'O2', 'N2', 'NO', 'C3H8', 'H', 'O', 'N']
+        self.solveWithEnergy = False
+        self.prodTemperature = None
         
     def addPhi(self, phi):
         self.phi = phi
@@ -165,18 +167,14 @@ class Reaction:
         
         return self.Carbon, self.Hydrogen, self.Oxygen, self.Nitrogen
         
-    def getVarsE(vars): # No entiendo para que es esta funcion
-        
-        B, C, D, E, F, G, H, I, J, K, L, M, T = vars
-        return B, C, D, E, F, G, H, I, J, K, L, M, T
-       
-    def getVars(vars):  # No entiendo para que es esta funcion
-        
-        B, C, D, E, F, G, H, I, J, K, L, M = vars
-        return B, C, D, E, F, G, H, I, J, K, L, M
-        
+    def addFirstLaw(self, boolean):
+        self.solveWithEnergy = boolean
     #def getEquations(self, vars, solveWithEnergy = True, P = 101.325, Patm = 101.325):
-    def getEquations(self, CI, solveWithEnergy = True, P = 101.325, Patm = 101.325):
+        
+    def addProductTemperature(self, temp):
+        self.prodTemperature = temp
+        
+    def getEquations(self, vars, P = 101.325, Patm = 101.325):
         
         """
         Se usan las 4 ecuaciones de balance de masa y 8 de equilibrio para 
@@ -197,10 +195,10 @@ class Reaction:
             falta el NO2
         """
         
-        if solveWithEnergy:
-            B, C, D, E, F, G, H, I, J, K, L, M, T = CI
+        if self.solveWithEnergy:
+            B, C, D, E, F, G, H, I, J, K, L, M, T = vars
         else:
-            B, C, D, E, F, G, H, I, J, K, L, M = CI
+            B, C, D, E, F, G, H, I, J, K, L, M = vars
         
         n = B + C + D + E + F + G + H + I + J + K + L + M  
         f = (P/Patm)/n
@@ -221,8 +219,16 @@ class Reaction:
         # ['H2_to_2H', 'O2_to_2O', 'N2_to_2N', 'O2-N2_to_NO', 'H2O_to_H2-O2', 
         #  'H2O_to_OH-H2', 'CO2_to_CO-O2','CO2-H2_to_CO-H2O']
         
-        kp_list = kp.kp_values(T)
-        
+        try:
+            kp_list = kp.kp_values(T)
+        except:
+            if self.prodTemperature == None:
+                raise ValueError("Please add the product temperature")
+                
+            else:
+                T = self.prodTemperature
+                kp_list = kp.kp_values(T)
+            
         
         # Equilibrium equations
         
@@ -237,13 +243,13 @@ class Reaction:
         
         # Energy equations
         
-        if solveWithEnergy == True:
+        if self.solveWithEnergy:
             
             n_salida = np.array([B, C, D, E, F, G, H, I, J, K, L, M])
             
-            h_com_reac = np.dot(self.n_entrada, prop.hf_reactivos(self.reactNames))
-            h_com_pro = np.dot(n_salida, prop.hf_productos(self.productNames))
-            
+            h_com_reac = np.dot(self.n_entrada, prop.hf_reactivos(self.reactNames)) # Entalpía de combustion reactivos
+            h_com_pro = np.dot(n_salida, prop.hf_productos(self.productNames)) #Entalpía de combustión productos
+                        
             # Falta agregarle el delta de entalpía a los reactivos para cuando ingresan al 
             # reactor a una T diferente a t ambiente.
         
@@ -253,6 +259,7 @@ class Reaction:
             
             # El termino de calbio de la entalpía prod por la deferencia de T:
             
+            # Garantizar que los nombres coincidan con los n
             deltaH_pro = np.dot(n_salida, prop.deltaH(T, self.productNames))
             
             energyEq = LHS - deltaH_pro
@@ -263,17 +270,18 @@ class Reaction:
             return [C_balance, H_balance, O_balance, N_balance, 
                     eqn1, eqn2, eqn3, eqn4, eqn5, eqn6, eqn7, eqn8]
         
-    def solveSystem(self, CI, solveWithEnergy = False):
+    def solveSystem(self, CI):
         
-        if solveWithEnergy:
-            B, C, D, E, F, G, H, I, J, K, L, M, T =  fsolve(self.getEquations(CI), CI)
+        if self.solveWithEnergy:
+            B, C, D, E, F, G, H, I, J, K, L, M, T =  fsolve(self.getEquations, CI)
             self.n_salida_real = [B, C, D, E, F, G, H, I, J, K, L, M, T]
+            return [self.n_salida_real[0:-1], self.n_salida_real[-1]]
             
         else:
-            B, C, D, E, F, G, H, I, J, K, L, M =  fsolve(self.getEquations(CI), CI)
+            B, C, D, E, F, G, H, I, J, K, L, M =  fsolve(self.getEquations, CI)
             self.n_salida_real = [B, C, D, E, F, G, H, I, J, K, L, M]
         
-        return self.n_salida_real
+            return self.n_salida_real
     
     def getReactmass(self):
         
@@ -288,8 +296,12 @@ class Reaction:
     
     def getProdMass(self):
         
-        prodMAss = np.matmul(self.n_salida_real, (np.matmul(self.comp_salida_real, 
-                                                        self.genMolarWeight))) #kgFuel
+        if self.solveWithEnergy:
+            prodMAss = np.matmul(self.n_salida_real[0: -1], (np.matmul(self.comp_salida_real, 
+                                                                  self.genMolarWeight))) #kgFuel
+        else:
+            prodMAss = np.matmul(self.n_salida_real, (np.matmul(self.comp_salida_real, 
+                                                                  self.genMolarWeight))) #kgFuel
         return prodMAss
         
         

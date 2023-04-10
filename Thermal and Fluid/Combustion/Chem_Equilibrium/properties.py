@@ -93,6 +93,7 @@ def deltaH(T, elements):
             deltaH_values.append(Th.cal_property(T, i, 'h') - Th.cal_property(298.15, i, 'h'))
         except UnboundLocalError:
             print('Se putio con ', i)
+            return np.zeros(len(elements))
     return np.array(deltaH_values)
 
 def calcT(cte, n, epsilon = 100):

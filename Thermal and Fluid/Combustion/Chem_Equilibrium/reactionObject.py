@@ -8,6 +8,7 @@ Created on Fri Feb 17 17:35:50 2023
 
 import numpy as np
 import kp 
+import kc
 from scipy.optimize import fsolve
 import properties as prop
 
@@ -116,6 +117,12 @@ class Reaction:
         self.productNames = ['CO2', 'CO', 'H2O', 'H2', 'OH', 'O2', 'N2', 'NO', 'C3H8', 'H', 'O', 'N']
         self.solveWithEnergy = False
         self.prodTemperature = None
+        
+    def addComp_salida_est(self, compMatrix):
+        self.comp_salida_est = compMatrix
+    
+    def addComp_salida_real(self, compMatrix):
+        self.comp_salida_real = compMatrix
         
     def addPhi(self, phi):
         self.phi = phi
@@ -270,16 +277,127 @@ class Reaction:
             return [C_balance, H_balance, O_balance, N_balance, 
                     eqn1, eqn2, eqn3, eqn4, eqn5, eqn6, eqn7, eqn8]
         
+    def getH2Equations(self, vars, P = 101.325, Patm = 101.325):
+        
+        """
+        Se usan las 4 ecuaciones de balance de masa y 8 de equilibrio para 
+        encontrar cada coeficiente, los coeficientes corresponden a:
+                    
+            B: H
+            C: H2
+            D: O
+            E: O2
+            F: OH
+            G: H2O
+            H: HO2
+            I: H2O2
+            J: N2
+        """
+        
+        if self.solveWithEnergy:
+            B, C, D, E, F, G, H, I, J, T = vars
+        else:
+            B, C, D, E, F, G, H, I, J = vars
+        
+        n = B + C + D + E + F + G + H + I + J
+        f = (P/Patm)/n
+        
+        if self.Carbon == None:
+            self.getTotalReacRealElements()
+        
+        # Todas se igualan a 0
+        
+        # Mass balance:
+        H_balance = B + 2*C + F + 2*G + H + 2*I - self.Hydrogen
+        O_balance = D + 2*E + F + G + 2*H + 2*I - self.Oxygen 
+        N_balance = 2*J - self.Nitrogen
+        
+        # There are all the ecuations names, please select all that apply.
+        
+        # ['H2_to_2H', 'O2_to_2O', 'N2_to_2N', 'O2-N2_to_NO', 'H2O_to_H2-O2', 
+        #  'H2O_to_OH-H2', 'CO2_to_CO-O2','CO2-H2_to_CO-H2O']
+        
+        reactions = ['H2_to_2H', 'O2_to_2O', 'H2O_to_H2-O2', 'H2O_to_OH-H2']
+        
+        newReactions = ['17', '18'] # Del mecanismo de reacción tomamos la eq 18 y 19
+        try:
+            kp_list = kp.kp_values(T, reactions)
+            kc_list = kc.get_kc(T, newReactions)
+            
+        except:
+            if self.prodTemperature == None:
+                raise ValueError("Please add the product temperature")
+                
+            else:
+                T = self.prodTemperature
+                kp_list = kp.kp_values(T, reactions)
+                kc_list = kc.get_kc(T, newReactions)
+            
+        
+        # Equilibrium equations
+        
+        eqn1 = (B**2) * f - kp_list[0]*C # H2_to_2H
+        eqn2 = D**2 * f - kp_list[1]*E # O2_to_2O
+        eqn3 = E * C**2 * f - (kp_list[2]*G)**2 # -- H2O_to_H2-O2
+        eqn4 = F**2 * C * f - (kp_list[3]*G)**2 # H2O_to_OH-H2
+        
+        # Cinetic Equations
+        
+        eqn5 = C * H - (kc_list[0] * I * B) # H2O2-H_to_H2-HO2
+        eqn6 = F * H - (kc_list[1] * I * D) # H2O2-O_to_OH-HO2
+        
+        # Energy equations
+        
+        if self.solveWithEnergy:
+            
+            n_salida = np.array([B, C, D, E, F, G, H, I, J])
+            
+            h_com_reac = np.dot(self.n_entrada, prop.hf_reactivos(self.reactNames)) # Entalpía de combustion reactivos
+            h_com_pro = np.dot(n_salida, prop.hf_productos(self.productNames)) #Entalpía de combustión productos
+                        
+            # Falta agregarle el delta de entalpía a los reactivos para cuando ingresan al 
+            # reactor a una T diferente a t ambiente.
+        
+            # The left hand side:
+                
+            LHS = (h_com_reac - h_com_pro)
+            
+            # El termino de calbio de la entalpía prod por la deferencia de T:
+            
+            # Garantizar que los nombres coincidan con los n
+            deltaH_pro = np.dot(n_salida, prop.deltaH(T, self.productNames))
+            
+            energyEq = LHS - deltaH_pro
+            
+            return [H_balance, O_balance, N_balance, 
+                    eqn1, eqn2, eqn3, eqn4, eqn5, eqn6, energyEq]
+        else:
+            return [H_balance, O_balance, N_balance, 
+                    eqn1, eqn2, eqn3, eqn4, eqn5, eqn6]
+        
     def solveSystem(self, CI):
         
         if self.solveWithEnergy:
             B, C, D, E, F, G, H, I, J, K, L, M, T =  fsolve(self.getEquations, CI)
-            self.n_salida_real = [B, C, D, E, F, G, H, I, J, K, L, M, T]
-            return [self.n_salida_real[0:-1], self.n_salida_real[-1]]
+            self.n_salida_real = [B, C, D, E, F, G, H, I, J, K, L, M]
+            return [self.n_salida_real, T]
             
         else:
             B, C, D, E, F, G, H, I, J, K, L, M =  fsolve(self.getEquations, CI)
             self.n_salida_real = [B, C, D, E, F, G, H, I, J, K, L, M]
+        
+            return self.n_salida_real
+        
+    def solveH2System(self, CI):
+        
+        if self.solveWithEnergy:
+            B, C, D, E, F, G, H, I, J, T =  fsolve(self.getH2Equations, CI)
+            self.n_salida_real = [B, C, D, E, F, G, H, I, J]
+            return [self.n_salida_real, T]
+            
+        else:
+            B, C, D, E, F, G, H, I, J =  fsolve(self.getH2Equations, CI)
+            self.n_salida_real = [B, C, D, E, F, G, H, I, J]
         
             return self.n_salida_real
     

@@ -117,6 +117,7 @@ class Reaction:
         self.productNames = ['CO2', 'CO', 'H2O', 'H2', 'OH', 'O2', 'N2', 'NO', 'C3H8', 'H', 'O', 'N']
         self.solveWithEnergy = False
         self.prodTemperature = None
+        self.prodPressure = None
         
     def addComp_salida_est(self, compMatrix):
         self.comp_salida_est = compMatrix
@@ -128,7 +129,7 @@ class Reaction:
         self.phi = phi
     
     def addProductSpecies(self, names):
-        self.productNames = self.productNames + names
+        self.productNames = names
         
     def addFuelSpecies(self, comp_entrada_i, name, n_i = 1):
         
@@ -180,8 +181,11 @@ class Reaction:
         
     def addProductTemperature(self, temp):
         self.prodTemperature = temp
+    
+    def addProductPressure(self, P):
+        self.prodPressure = P
         
-    def getEquations(self, vars, P = 101.325, Patm = 101.325):
+    def getEquations(self, vars, Patm = 101.325):
         
         """
         Se usan las 4 ecuaciones de balance de masa y 8 de equilibrio para 
@@ -208,7 +212,7 @@ class Reaction:
             B, C, D, E, F, G, H, I, J, K, L, M = vars
         
         n = B + C + D + E + F + G + H + I + J + K + L + M  
-        f = (P/Patm)/n
+        f = (self.prodPressure/Patm)/n
         
         if self.Carbon == None:
             self.getTotalReacRealElements()
@@ -277,7 +281,7 @@ class Reaction:
             return [C_balance, H_balance, O_balance, N_balance, 
                     eqn1, eqn2, eqn3, eqn4, eqn5, eqn6, eqn7, eqn8]
         
-    def getH2Equations(self, vars, P = 101.325, Patm = 101.325):
+    def getH2Equations(self, vars, Patm = 101.325):
         
         """
         Se usan las 4 ecuaciones de balance de masa y 8 de equilibrio para 
@@ -300,7 +304,7 @@ class Reaction:
             B, C, D, E, F, G, H, I, J = vars
         
         n = B + C + D + E + F + G + H + I + J
-        f = (P/Patm)/n
+        f = (self.prodPressure/Patm)/n
         
         if self.Carbon == None:
             self.getTotalReacRealElements()
@@ -308,6 +312,7 @@ class Reaction:
         # Todas se igualan a 0
         
         # Mass balance:
+        self.getTotalReacRealElements()
         H_balance = B + 2*C + F + 2*G + H + 2*I - self.Hydrogen
         O_balance = D + 2*E + F + G + 2*H + 2*I - self.Oxygen 
         N_balance = 2*J - self.Nitrogen
@@ -396,7 +401,7 @@ class Reaction:
             return [self.n_salida_real, T]
             
         else:
-            B, C, D, E, F, G, H, I, J =  fsolve(self.getH2Equations, CI)
+            B, C, D, E, F, G, H, I, J =  fsolve(self.getH2Equations, CI, maxfev=5000)
             self.n_salida_real = [B, C, D, E, F, G, H, I, J]
         
             return self.n_salida_real

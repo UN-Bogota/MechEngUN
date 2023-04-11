@@ -8,8 +8,12 @@ Created on Mon Apr 10 11:23:50 2023
 
 import random
 import numpy as np
-
+import matplotlib.pyplot as plt
 from reactionObject import Reaction
+import sys
+
+sys.setrecursionlimit(2000)
+
 
 def genInitCon(solveWithEnergy = False):
     
@@ -21,8 +25,9 @@ def genInitCon(solveWithEnergy = False):
               0.8*n, 2000]
     
     else:
-        CI = [0.4*n, 0.01*n, 0.45*n, 0.1*n, 0.02*n, 0.1*n, 0.1*n, 0.1*n,
-              0.8*n]
+        CI = [0.4*n, 0.01*n, 0.45*n, 0.1*n, 0.02*n, 1, 0.1*n, 0.1*n,
+              2]
+        #CI = [1.745e-09, 0.20, 1.0195e-16, 4.714e-19, 1.37e-08, 0.576, 2.51726e-05, 0.20644, 1.8]
     return CI
 
 def molarProdFrac(products):
@@ -88,10 +93,11 @@ H2Reac = Reaction()
 
 hydrogen = [0, 2, 0, 0]
 H2_name = 'H2'
-phi = 0.5
+#phi = 0.5
 temperatura = 1000
 presion = 101.325
 
+productNames = ['H', 'H2', 'O', 'O2', 'OH', 'H2O', 'HO2', 'H2O2', 'N2']
 
 products_real = np.array([
                     [0, 1, 0, 0], # H
@@ -116,17 +122,25 @@ H2Reac.addComp_salida_real(products_real)
 
 H2Reac.addFuelSpecies(hydrogen, H2_name)
 
-H2Reac.addPhi(phi)
 H2Reac.addProductTemperature(temperatura)
-
-
+H2Reac.addProductPressure(presion)
+H2Reac.addProductSpecies(productNames)
 H2Reac.addFirstLaw(False)
 
 sol = findSolution(H2Reac)
 
+phi = np.linspace(0.5, 1.5, 25)
 
-print(sol)
-
-print(sol/sum(sol))
-
-print(sum(sol/sum(sol)))
+resul= np.zeros([len(phi),9])
+j=0
+for i in phi:
+    H2Reac.addPhi(i)
+    sol = findSolution(H2Reac)
+    print(sol)
+    resul[j,:]=sol/sum(sol)
+    j+=1
+    
+plt.figure(1)
+for k in range(9):
+    plt.plot(phi,resul[:,k],label=productNames[k])
+plt.legend()

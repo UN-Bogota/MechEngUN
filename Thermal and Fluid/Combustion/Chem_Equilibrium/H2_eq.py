@@ -25,7 +25,7 @@ def genInitCon(solveWithEnergy = False):
               0.8*n, 2000]
     
     else:
-        CI = [0.4*n, 0.01*n, 0.45*n, 0.1*n, 0.02*n, 1, 0.1*n, 0.1*n,
+        CI = [0.01*n, 0.1, 0.01*n, 0.002, 0.01*n, 0.7, 0.3*n, 0.01*n,
               2]
         #CI = [1.745e-09, 0.20, 1.0195e-16, 4.714e-19, 1.37e-08, 0.576, 2.51726e-05, 0.20644, 1.8]
     return CI
@@ -93,7 +93,9 @@ H2Reac = Reaction()
 
 hydrogen = [0, 2, 0, 0]
 H2_name = 'H2'
-#phi = 0.5
+
+
+#phi = 1
 temperatura = 1000
 presion = 101.325
 
@@ -127,13 +129,15 @@ H2Reac.addProductPressure(presion)
 H2Reac.addProductSpecies(productNames)
 H2Reac.addFirstLaw(False)
 
-sol = findSolution(H2Reac)
+#sol = findSolution(H2Reac)
 
-phi = np.linspace(0.5, 1.5, 25)
+#print(sol/sum(sol))
+phi = np.linspace(0.5, 1.7, 26)
 
 resul= np.zeros([len(phi),9])
 j=0
 for i in phi:
+    print('para el phi: ', i, ' ----------------------------')
     H2Reac.addPhi(i)
     sol = findSolution(H2Reac)
     print(sol)

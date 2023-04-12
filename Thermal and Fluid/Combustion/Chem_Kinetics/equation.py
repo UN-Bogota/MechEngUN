@@ -47,3 +47,4 @@ class kinetics():
         
         omega = omega[0,0:9]
         return omega
+    

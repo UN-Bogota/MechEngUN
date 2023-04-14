@@ -10,7 +10,7 @@ import numpy as np
 
 
 def cal_property(T, name, prop):
-    print('Esto es T: ', T)
+    
     if 290 <= T <= 1000:
         if name == 'CO':
             # h_est = 8669.0
@@ -148,6 +148,24 @@ def cal_property(T, name, prop):
             a5 = 0
             a6 = 0
             a7 = 0
+        elif name == 'HO2':
+            # Falta poner lo valores correctos
+            a1 = 0.02672145E+02
+            a2 = 0.03056293E-01
+            a3 = -0.08730260E-05
+            a4 = 0.12009964E-09
+            a5 = -0.06391618E-13
+            a6 = -0.02989921E+06
+            a7 = 0.06862817E+02
+        elif name == 'H2O2':
+            # Falta poner lo valores correctos
+            a1 = 0.02672145E+02
+            a2 = 0.03056293E-01
+            a3 = -0.08730260E-05
+            a4 = 0.12009964E-09
+            a5 = -0.06391618E-13
+            a6 = -0.02989921E+06
+            a7 = 0.06862817E+02
 
     if 1000 < T <= 5000:
         if name == 'CO':
@@ -271,6 +289,25 @@ def cal_property(T, name, prop):
             a5 = 0
             a6 = 0
             a7 = 0
+        elif name == 'HO2':
+            # Falta poner lo valores correctos
+            a1 = 0.02672145E+02
+            a2 = 0.03056293E-01
+            a3 = -0.08730260E-05
+            a4 = 0.12009964E-09
+            a5 = -0.06391618E-13
+            a6 = -0.02989921E+06
+            a7 = 0.06862817E+02
+        elif name == 'H2O2':
+            # Falta poner lo valores correctos
+            a1 = 0.02672145E+02
+            a2 = 0.03056293E-01
+            a3 = -0.08730260E-05
+            a4 = 0.12009964E-09
+            a5 = -0.06391618E-13
+            a6 = -0.02989921E+06
+            a7 = 0.06862817E+02
+            
     if T > 5000:
         print('Se putea ----------')
     Ru = 8.31446261815324  # kJ/kmol K

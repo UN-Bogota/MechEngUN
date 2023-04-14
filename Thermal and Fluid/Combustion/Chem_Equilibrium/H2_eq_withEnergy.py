@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 """
 Created on Mon Apr 10 11:23:50 2023
 
@@ -21,8 +23,8 @@ def genInitCon(solveWithEnergy = False):
     n = random.random()*10
     
     if solveWithEnergy:
-        CI = [0.4*n, 0.01*n, 0.45*n, 0.1*n, 0.02*n, 0.1*n, 0.1*n, 0.1*n,
-              0.8*n, 2000]
+        CI = [0.01*n, 0.1, 0.01*n, 0.002, 0.01*n, 0.7, 0.3*n, 0.01*n,
+              2, 2000]
     
     else:
         CI = [0.01*n, 0.1, 0.01*n, 0.002, 0.01*n, 0.7, 0.3*n, 0.01*n,
@@ -66,7 +68,6 @@ def findSolution(reaction, epsilon = 1E-9):
     while (not noNegativity) and  abs(deltaMass) >= epsilon :
 
         CI = genInitCon(reaction.solveWithEnergy)
-        
         sol_i = reaction.solveH2System(CI)
         deltaMass = reaction.getReactmass() - reaction.getProdMass()
         
@@ -96,7 +97,6 @@ H2_name = 'H2'
 
 
 #phi = 1
-temperatura = 1000
 presion = 101.325
 
 productNames = ['H', 'H2', 'O', 'O2', 'OH', 'H2O', 'HO2', 'H2O2', 'N2']
@@ -124,10 +124,9 @@ H2Reac.addComp_salida_real(products_real)
 
 H2Reac.addFuelSpecies(hydrogen, H2_name)
 
-H2Reac.addProductTemperature(temperatura)
 H2Reac.addProductPressure(presion)
 H2Reac.addProductSpecies(productNames)
-H2Reac.addFirstLaw(False)
+H2Reac.addFirstLaw(True)
 
 #sol = findSolution(H2Reac)
 
@@ -135,13 +134,16 @@ H2Reac.addFirstLaw(False)
 phi = np.linspace(0.5, 1.7, 26)
 
 resul= np.zeros([len(phi),9])
+adiaTemps =np.zeros([len(phi),1])
 j=0
 for i in phi:
     print('para el phi: ', i, ' --------------------------------')
     H2Reac.addPhi(i)
     sol = findSolution(H2Reac)
     print(sol)
-    resul[j,:]=sol/sum(sol)
+    input()
+    resul[j,:]=sol[0:-1]/sum(sol[0:-1])
+    adiaTemps[j,:] = sol[-1]
     j+=1
     
 plt.figure(1)

@@ -15,12 +15,12 @@ class kinetics():
         self.reactorType = None
         self.effiency = None
         
-    def get_M(self, concentrations, eficiencia):
+    def get_M(self, concentrations):
         """Recibe eficiencias (lista longitud especiaes) y concentraciones (incógnitas)
         Retorna lista con las M
         """
         cT=concentrations.T
-        M = eficiencia@cT
+        M = self.effiency@cT
         return M.T
     
     def setReactorType(self, reactotType):
@@ -30,17 +30,17 @@ class kinetics():
         
         self.effiency = eficiencia
 
-    def getDiffEq(self, concentrations):
+    def getDiffEq(self,t, concentrations,omega):
         
         concentrations = concentrations.reshape(1, len(concentrations))
         
-        con_M = self.get_M(concentrations, self.effiency)
+        con_M = self.get_M(concentrations)
         
         concentrations = np.concatenate((concentrations, con_M), axis=1)
         reac, conc = self.nup.shape
         
         q = np.array([[0]])
-        print(concentrations)
+        
         for i in range(reac):
             prod_f = concentrations  ** self.nup[i, :]
             prod_r = concentrations  ** self.nupp[i, :]
@@ -57,18 +57,19 @@ class kinetics():
         omega = q.T @ self.nu
         
         omega = omega[0,0:9]
-        return omega #np array
+        print(omega)
+        #return omega #np array
     
     
-    def getEcuations(self, concentrations):
+    def getEcuations(self,t,concentrations,omega):
         
         if self.reactorType == None:
             
-            return self.getDiffEq(self, concentrations, self.effiency)
+            return self.getDiffEq(self,t,concentrations,omega)
             
         elif self.reactorType == 'constant-volume':
             
-            omega = self.getDiffEq(self, concentrations, self.effiency)
+            omega = self.getDiffEq(self,t,concentrations,omega)
             pass
             # acoplat la ecuacion de temperatura a la ecuación de las omega
             

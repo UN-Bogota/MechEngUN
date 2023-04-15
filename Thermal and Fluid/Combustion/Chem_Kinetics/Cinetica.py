@@ -9,6 +9,8 @@ Created on Mon Mar 13 14:34:22 2023
 import numpy as np
 from equation import *
 from resources import *
+from scikits.odes import ode
+import matplotlib.pyplot as plt
 
                 #H H2 O O2 OH H2O N2 HO2 H2O2 M5 M6 M7 M8 M9 M15
 nup = np.array([[1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
@@ -56,5 +58,8 @@ nupp = np.array([[0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
 
 ecuaciones = kinetics(nup, nupp, k_values(1000))
 ef = get_ef()
-
-ecuaciones.getDiffEq(np.array([0,1,0,0.9,0.7,2,1,2, 7]), ef)
+ecuaciones.setEfficiency(ef)
+y0=np.array([0,1,0,0.9,0,0,3,0, 0])
+ecuaciones.getDiffEq(0,y0, np.array([]))
+solution = ode('cvode', ecuaciones.getDiffEq, old_api=False).solve(np.linspace(0,1e-4,2000), y0)
+plt.plot(solution.values.t, solution.values.y[:,0], label='Kinetishe')

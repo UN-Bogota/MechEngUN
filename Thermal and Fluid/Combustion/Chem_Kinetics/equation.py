@@ -30,7 +30,7 @@ class kinetics():
         
         self.effiency = eficiencia
 
-    def getDiffEq(self,t, concentrations,omega):
+    def getDiffEq(self,t, concentrations, omega):
         
         concentrations = concentrations.reshape(1, len(concentrations))
         
@@ -51,13 +51,14 @@ class kinetics():
             q_i = self.k[i, 0] * prod_f - self.k[i, 1] * prod_r
             
             q = np.append(q, [[q_i]], axis = 0)
-            
         q = np.delete(q, 0, 0)
         self.nu = self.nupp-self.nup
-        omega = q.T @ self.nu
-        
-        omega = omega[0,0:9]
-        print(omega)
+        omega1 = q.T @ self.nu
+        omega2=omega1[0]
+        #omega = omega[0,0:9]
+        for i in range(9):
+            omega[i]=omega2[i]
+        #print(omega)
         #return omega #np array
     
     

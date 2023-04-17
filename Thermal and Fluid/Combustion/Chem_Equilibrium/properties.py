@@ -90,11 +90,17 @@ def deltaH(T, elements):
     
     for i in elements:
         try:
-            value = Th.cal_property(T, i, 'h') - Th.cal_property(298.15, i, 'h')
+            if i == 'H2O2' or i == 'HO2':
+                value = Th.cal_property(T, i, 'h')    
+            else: 
+                value = Th.cal_property(T, i, 'h') - Th.cal_property(298.15, i, 'h')
+            
             deltaH_values.append(value)
+            
         except UnboundLocalError:
             print('Se putio con ', i, 'a T= ', T)
             return np.zeros(len(elements))
+        
     return np.array(deltaH_values)
 
 def calcT(cte, n, epsilon = 100):

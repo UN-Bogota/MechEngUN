@@ -39,7 +39,7 @@ class kinetics():
             T=[concentrations[-2],concentrations[-1]]
             self.T=T[0]
             concentrations=concentrations[0:-2]
-        concentrations = concentrations/sum(concentrations)
+        #concentrations = concentrations/sum(concentrations)
         concentrations = concentrations.reshape(1, len(concentrations))
         
         con_M = self.get_M(concentrations)

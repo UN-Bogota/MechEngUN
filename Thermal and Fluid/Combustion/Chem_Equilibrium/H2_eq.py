@@ -31,7 +31,9 @@ def genInitCon(solveWithEnergy = False):
             
             n = random.uniform(0.1, 0.7)
             n = round(n, 4)
-            CI = [0.00001, 0.00001*n, 0.00001, 0.4*n, 0.0001, 1.5*n, 0.000001, 0.0000001, 3*n]
+            #CI = [0.0001, 0.002*n, 0.0001, 0.5*n, 0.006, 1.5*n, 0.0000001, 0.0000001, 3*n] #->1_2000
+            #CI = [0.0000001, 0.000003*n, 0.00001, 0.3*n, 0.0001, 1.5*n, 0.0000001, 0.000001, 3*n] #->1_1500
+            
             #CI = [0.00013*n, 0.01, 0.000703*n, 0.2121*n, 0.0102*n, 0.9934, 7.74325e-05*n, 5.278e-05*n, 2.687]
         elif H2Reac.phi >= 1.01 and H2Reac.phi < 1.15:
             n = random.uniform(0.4, 1)
@@ -109,7 +111,7 @@ H2Reac = Reaction()
 hydrogen = [0, 2, 0, 0]
 H2_name = 'H2'
 
-temperatura = 1000
+temperatura = 1500
 presion = 101.325
 
 productNames = ['H', 'H2', 'O', 'O2', 'OH', 'H2O', 'HO2', 'H2O2', 'N2']

@@ -49,6 +49,7 @@ def hf_OH():
 def hf_NO(): 
     return 88850.0
 
+# las siguientes entalpias estan en kJ/kmol
 species = {
     'CH4': -74850.0,
     'C2H6': -103850.0,
@@ -61,13 +62,13 @@ species = {
     'N2': 0.0,
     'O2': 0.0,
     'CO': -110530.0,
-    'H2O': -241820.0,
+    'H2O': -241826.0,
     'H2': 0.0,
-    'OH': 39460.0,
+    'OH': 38990.0,
     'NO': 88850.0,
     'N' : 472629.0,
-    'O': 249197.0,
-    'H': 217977.0,
+    'O': 249180.0,
+    'H': 217998.0, # kJ/kmol
     'HO2': 2090.0,     #PENDIENTE en ThProoerties
     'H2O2': -136110.0   #PENDIENTE en ThProoerties
     }

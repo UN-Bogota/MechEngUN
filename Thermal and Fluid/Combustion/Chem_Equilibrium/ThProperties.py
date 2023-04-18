@@ -329,10 +329,7 @@ def cal_property(T, name, prop):
             F = 0
             G = 0
             H = 0
-            
-    if T > 5000:
-        print('Se putea ----------')
-        
+                
     Ru = 8.31446261815324  # kJ/kmol K
     if prop == 'cp':
         cp = Ru * (a1 + a2*T + a3*T**2 + a4*T**3 + a5*T**4)
@@ -343,9 +340,8 @@ def cal_property(T, name, prop):
         if name == 'H2O2' or name == 'HO2':
             
             t = T/1000
-            
             h = (A * t + B * (t**2) / 2 + C * (t**3) / 3 + D * (t**4) / 4 - E / t + F - H) * 1000
-                    
+            
         else: 
             h = Ru * T * (a1 + ((a2/2) * T) + ((a3/3) * (T**2)) + (a4/4) * (T**3) + (a5/5) * (T**4) + (a6/T))
             

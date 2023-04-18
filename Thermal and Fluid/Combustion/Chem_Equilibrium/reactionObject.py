@@ -122,14 +122,12 @@ class Reaction:
     def addComp_salida_est(self, compMatrix):
         self.comp_salida_est = compMatrix
     
-    def addComp_salida_real(self, compMatrix):
+    def addComp_salida_real(self, compMatrix, names):
         self.comp_salida_real = compMatrix
+        self.productNames = names
         
     def addPhi(self, phi):
         self.phi = phi
-    
-    def addProductSpecies(self, names):
-        self.productNames = names
         
     def addFuelSpecies(self, comp_entrada_i, name, n_i = 1):
         
@@ -157,14 +155,12 @@ class Reaction:
         
         Carbon, Hydrogen, Oxygen, Nitrogen = self.getTotalFuelElements()
         self.A_est = ((Carbon*2 + Hydrogen/2) - Oxygen)/(2*0.21) # Balance de Oxigenos
-        
         return self.A_est
 
     def getA_real(self):
         
         A_est = self.getA_est()
         self.A_real = A_est/self.phi
-        
         return self.A_real
     
     def getTotalReacRealElements(self):
@@ -172,7 +168,6 @@ class Reaction:
         self.Carbon, self.Hydrogen, self.Oxygen, self.Nitrogen = self.getTotalFuelElements()
         self.Oxygen +=  A_real*2*0.21
         self.Nitrogen += A_real*0.79*2
-        
         return self.Carbon, self.Hydrogen, self.Oxygen, self.Nitrogen
         
     def addFirstLaw(self, boolean):
@@ -296,6 +291,7 @@ class Reaction:
             H: HO2
             I: H2O2
             J: N2
+            
         """
         
         if self.solveWithEnergy:
@@ -304,10 +300,13 @@ class Reaction:
             B, C, D, E, F, G, H, I, J = vars
         
         n = B + C + D + E + F + G + H + I + J
+        
         f = (self.prodPressure/Patm)/n
-                # Todas se igualan a 0
+        
+        # Todas las ecuaciones se igualan a 0
         
         # Mass balance:
+            
         self.getTotalReacRealElements()
         
         H_balance = B + 2*C + F + 2*G + H + 2*I - self.Hydrogen
@@ -321,7 +320,9 @@ class Reaction:
         
         reactions = ['H2_to_2H', 'O2_to_2O', 'H2O_to_H2-O2', 'H2O_to_OH-H2']
         
-        newReactions = ['17', '18'] # Del mecanismo de reacción tomamos la eq 18 y 19
+        #newReactions = ['17', '18'] # Del mecanismo de reacción tomamos la eq 18 y 19
+        #newReactions = ['13', '16'] # Del mecanismo de reacción tomamos la eq 13 y 17
+        newReactions = ['13', '17'] # Del mecanismo de reacción tomamos la eq 13 y 17
         try:
             kp_list = kp.kp_values(T, reactions)
             kc_list = kc.get_kc(T, newReactions)
@@ -340,14 +341,16 @@ class Reaction:
         
         eqn1 = (B**2) * f - kp_list[0]*C # H2_to_2H
         eqn2 = D**2 * f - kp_list[1]*E # O2_to_2O
-        eqn3 = E * C**2 * f - (kp_list[2]*G)**2 # -- H2O_to_H2-O2
+        eqn3 = E * (C**2) * f - (kp_list[2]*G)**2 # -- H2O_to_H2-O2
         eqn4 = F**2 * C * f - (kp_list[3]*G)**2 # H2O_to_OH-H2
         
         # Cinetic Equations
         
-        eqn5 = C * H - (kc_list[0] * I * B) # H2O2-H_to_H2-HO2
-        eqn6 = F * H - (kc_list[1] * I * D) # H2O2-O_to_OH-HO2
+        # eqn5 = C * H - (kc_list[0] * I * B) # H2O2-H_to_H2-HO2
+        # eqn6 = F * H - (kc_list[1] * I * D) # H2O2-O_to_OH-HO2
         
+        eqn5 = G * E - (kc_list[0] * I * F) 
+        eqn6 = C * H - (kc_list[1] * I * B) 
         # Energy equations
         
         if self.solveWithEnergy:
@@ -360,8 +363,9 @@ class Reaction:
             # reactor a una T diferente a t ambiente.
         
             # The left hand side:
-                
-            LHS = (h_com_reac - h_com_pro)
+            deltaH_reac = np.dot(self.n_entrada, prop.deltaH(298.15, self.reactNames))    
+            
+            LHS = (h_com_reac + deltaH_reac - h_com_pro)
             
             # El termino de calbio de la entalpía prod por la deferencia de T:
             

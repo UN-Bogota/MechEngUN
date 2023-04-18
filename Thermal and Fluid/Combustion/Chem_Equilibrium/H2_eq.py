@@ -11,10 +11,11 @@ import numpy as np
 import matplotlib.pyplot as plt
 from reactionObject import Reaction
 import sys
+import time
 
 sys.setrecursionlimit(2000)
 
-
+inicio = time.time()
 def genInitCon(solveWithEnergy = False):
     
     #random.seed(10, CO H2O, H2, OH, O2, N2, NO, C3H8, H, O, N)
@@ -25,9 +26,14 @@ def genInitCon(solveWithEnergy = False):
               0.8*n, 2000]
     
     else:
-        CI = [0.01*n, 0.1, 0.01*n, 0.002, 0.01*n, 0.7, 0.3*n, 0.01*n,
-              2]
-        #CI = [1.745e-09, 0.20, 1.0195e-16, 4.714e-19, 1.37e-08, 0.576, 2.51726e-05, 0.20644, 1.8]
+        #CI = [2.870e-05*n, 0.1, 0.00062*n, 0.2*n, 4.42e-4*n, 0.86, 0.000001*n, 0.00001*n, 1.8809]
+        if H2Reac.phi < 1.02:
+            CI =[0.002717*n, 0.1, 0.00367782*n, 0.2327979*n, 0.000285*n, 0.9828002, 0.031395*n, 5.306e-12*n, 2.849]
+            #CI = [9.84e-04*n, 0.00156, 0.0003276*n, 0.28049*n, 0.00387*n, 0.9961, 0.00056*n, 2.26035517e-05*n, 2.93]
+        else:
+            #CI = [2.870e-05*n, 0.1, 0.00062*n, 0.2*n, 4.42e-4*n, 0.86, 0.000001*n, 0.00001*n, 1.8809]
+            CI = [2.6053e-06*n, 0.2308, 3.716e-05*n, 1.67e-07*n, 6.3883e-4*n, 0.76915, 2.51152e-06*n, 1.5388e-05*n, 1.4468]
+            #CI = [0.001147*n, 0.19967223, 1.92052e-06*n, 3.3413e-04*n, 0.0004743*n, 0.7995, 1.608e-05, 1.76e-05, 1.50]
     return CI
 
 def molarProdFrac(products):
@@ -57,6 +63,7 @@ def findSolution(reaction, epsilon = 1E-9):
         The concentrations at equilibrium state
 
     """
+    
     
     deltaMass = 1
     noNegativity = False
@@ -94,10 +101,8 @@ H2Reac = Reaction()
 hydrogen = [0, 2, 0, 0]
 H2_name = 'H2'
 
-
-#phi = 1
-temperatura = 1000
-presion = 101.325
+temperatura = 2000
+presion = 101.325*10
 
 productNames = ['H', 'H2', 'O', 'O2', 'OH', 'H2O', 'HO2', 'H2O2', 'N2']
 
@@ -118,26 +123,27 @@ products_est = np.array([
                     [0, 0, 0, 2] # N2
 ])
 
+#-------------------------------------------------------------
+
 H2Reac.addComp_salida_est(products_est)
-
-H2Reac.addComp_salida_real(products_real)
-
+H2Reac.addComp_salida_real(products_real, productNames)
 H2Reac.addFuelSpecies(hydrogen, H2_name)
-
 H2Reac.addProductTemperature(temperatura)
 H2Reac.addProductPressure(presion)
-H2Reac.addProductSpecies(productNames)
 H2Reac.addFirstLaw(False)
 
-#sol = findSolution(H2Reac)
+#-------------------------------------------------------------
 
-#print(sol/sum(sol))
-phi = np.linspace(0.5, 1.7, 26)
+phi = np.arange(0.5, 1.7, 0.01)
+phi = np.round(phi, 2)
 
-resul= np.zeros([len(phi),9])
+#------------------------------------------------------------
+
+
+resul= np.zeros([len(phi),len(productNames)])
 j=0
 for i in phi:
-    print('para el phi: ', i, ' --------------------------------')
+    print('para el phi: ', i, ' --------------')
     H2Reac.addPhi(i)
     sol = findSolution(H2Reac)
     print(sol)
@@ -145,12 +151,28 @@ for i in phi:
     j+=1
     
 plt.figure(1)
-for k in range(9):
+
+for k in range(len(productNames)):
     plt.plot(phi,resul[:,k],label=productNames[k])
-plt.legend()
+    
+plt.legend(bbox_to_anchor=(1.05, 1), loc='upper left')
 plt.title('Fracción molar en equilibrio a P= ' + str(presion) + ' kPa y T= ' + str(temperatura) + ' K')
 plt.ylabel('Fracción molar [mol/mol H2]')
 plt.xlabel('Radio de equivalencia en la entrada $\phi$')
 plt.grid(color='k', linestyle=':')
 plt.show()
+
+fin = time.time()
+
+print(fin-inicio)
+
+titles = ['$phi$', 'H', 'H2', 'O', 'O2', 'OH', 'H2O', 'HO2', 'H2O2', 'N2']
+
+result = np.hstack((phi.reshape(len(phi),1), resul))
+result = np.vstack((titles, result))
+import pandas as pd
+
+df = pd.DataFrame(result)
+filename = 'equlibrium_result_at_T_' + str(temperatura) + '_P_' + str(presion)+'.csv'
+df.to_csv(filename, index=False)
 

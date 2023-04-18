@@ -183,9 +183,11 @@ plt.show()
 
 titles = ['$phi$', 'H', 'H2', 'O', 'O2', 'OH', 'H2O', 'HO2', 'H2O2', 'N2', '$T_ad$']
 
+result = np.hstack((adiaTemps, resul))
 result = np.hstack((phi.reshape(len(phi),1), resul))
 result = np.vstack((titles, result))
 
+input()
 import pandas as pd
 
 df = pd.DataFrame(result)

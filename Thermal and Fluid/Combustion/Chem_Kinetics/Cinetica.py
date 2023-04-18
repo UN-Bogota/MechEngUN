@@ -56,14 +56,23 @@ nupp = np.array([[0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
                  [0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0]                                       
                 ])
 
-lab=['H',' H2', 'O', 'O2', 'OH' ,'H2O', 'N2', 'HO2', 'H2O2']
-ecuaciones = kinetics(nup, nupp, k_values(1000))
+T=1000 #K
+P=101325 #Pa
+AR=1/0.42
+phi=1
+R=8.3144 #J/(mol*K)
+lab=['H2O2',' H2', 'O', 'O2', 'OH' ,'H2O', 'N2', 'HO2', 'H']
+ecuaciones = kinetics(nup, nupp)
 ef = get_ef()
 ecuaciones.setEfficiency(ef)
-y0=np.array([0,1,0,0.21,0,0,0.79,0, 0])
+ecuaciones.setT(T)
+y0=np.array([0,1,0,0.21*AR/phi,0,0,0.79*AR/phi,0, 0])
+y0=y0/sum(y0)
+#y0=y0*(P/(R*T))
 t0=0
-tf=1e-4
+tf=5e-4
 dt=1e-10
+#Parametrizar con phi y temperatura
 # r = ode(ecuaciones.getDiffEq).set_integrator('vode', method='bdf')
 # r.set_initial_value(y0, t0)
 # t=[]
@@ -73,10 +82,12 @@ dt=1e-10
 #     sol.append(r.integrate(r.t+dt))
 #     print(sol)
 #print(k_values(1000))
-#print(ecuaciones.getDiffEq(0,y0,np.zeros(9)))
+print(ecuaciones.getDiffEq(0,y0,np.zeros(9)))
 solution = ode('cvode', ecuaciones.getDiffEq, old_api=False).solve(np.arange(t0,tf,dt), y0)
-
-for i in range(9):
-    plt.plot(solution.values.t, solution.values.y[:,i],label=lab[i])
-plt.legend()
+sol=np.divide(solution.values.y, solution.values.y.sum(axis=1)[:, None])
+plt.plot(solution.values.t, sol)
+plt.legend(lab,loc='upper right')
+plt.title('$\phi$ ='+str(phi)+', T = '+str(T)+' [K], P = '+str(P/101325)+' [atm]')
+plt.ylabel('Fracción molar')
+plt.xlabel('tiempo [s]')
 #plt.plot(solution.values.t, solution.values.y[:,], label='Kinetishe')

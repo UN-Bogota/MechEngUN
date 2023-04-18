@@ -6,11 +6,26 @@ Created on Sat Mar 25 14:21:53 2023
 """
 import numpy as np
 import math
+import properties as prop
 
-def k_values(T):
+def troe(k0,k,T,M):
+    """
+    Calcula la corrección de Troe para el coeficiente de cinética
+    """    
+    a,T1,T2,T3=0.5,  1.0000E-30,  1.0000E+30,  1.0000E+100
+    Pr=k0/k*M
+    Fc=(1-a)*np.exp(-T/T1)+a*np.exp(-T/T2)+np.exp(-T3/T)
+    c=-0.4-0.67*np.log(Fc)
+    n=0.75-1.27*np.log(Fc)
+    d=0.14
+    F=10**((1+(np.log(Pr+c)/(n-d*(np.log10(Pr+c))))**2)**(-1)*np.log10(Fc))
+    kf=k*(Pr/(1+Pr))*F
+    return kf
+
+def k_values(T,M):
     
     '''
-    INPUT: Temperature [K]
+    INPUT: Temperature [K], M siendo un vector con [M9,M15]
     
     OUTPUT: 19x2 array that contains the Elementary reaction rate coefficients
             kf (1st column) and kr (2nd column)
@@ -46,9 +61,20 @@ def k_values(T):
         
         forward = constants.get(key)[0]
         reverse = constants.get(key)[1]
-        
-        kf = forward[0]*(T**forward[1])*math.exp(-forward[2]/(Ru*T))
-        kr = reverse[0]*(T**reverse[1])*math.exp(-reverse[2]/(Ru*T))
+        kf = forward[0]*(T**forward[1])*np.exp(-forward[2]/(Ru*T))
+        kr = reverse[0]*(T**reverse[1])*np.exp(-reverse[2]/(Ru*T))
+        if key == '9':
+            k0=3.4820E+16*(T**-4.1100E-01)*np.exp(1.1150E+03/(Ru*T))
+            #print(9,kf,kr)
+            kf=troe(k0,kf,T,M[0])
+            kr=troe(k0,kr,T,M[0])
+            #print(9,kf,kr)
+        if key == '15':
+            k0=1.202E+17*(T**0)*np.exp(45500/(Ru*T))
+            #print(15,kf,kr)
+            kf=troe(k0,kf,T,M[1])
+            kr=troe(k0,kr,T,M[1])
+            #print(15,kf,kr)
         
         K[int(key)-1] = [kf,kr]
         

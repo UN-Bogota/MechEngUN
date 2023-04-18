@@ -322,7 +322,7 @@ class Reaction:
         
         #newReactions = ['17', '18'] # Del mecanismo de reacción tomamos la eq 18 y 19
         #newReactions = ['13', '16'] # Del mecanismo de reacción tomamos la eq 13 y 17
-        newReactions = ['13', '17'] # Del mecanismo de reacción tomamos la eq 13 y 17
+        newReactions = ['13', '17'] # Del mecanismo de reacción tomamos la eq 13 y 18
         try:
             kp_list = kp.kp_values(T, reactions)
             kc_list = kc.get_kc(T, newReactions)
@@ -349,7 +349,7 @@ class Reaction:
         # eqn5 = C * H - (kc_list[0] * I * B) # H2O2-H_to_H2-HO2
         # eqn6 = F * H - (kc_list[1] * I * D) # H2O2-O_to_OH-HO2
         
-        eqn5 = G * E - (kc_list[0] * I * F) 
+        eqn5 = G * E - (kc_list[0] * H * F) 
         eqn6 = C * H - (kc_list[1] * I * B) 
         # Energy equations
         

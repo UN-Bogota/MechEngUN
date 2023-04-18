@@ -13,12 +13,12 @@ from reactionObject import Reaction
 import sys
 import time
 
-sys.setrecursionlimit(2000)
+sys.setrecursionlimit(3000)
 
 inicio = time.time()
 def genInitCon(solveWithEnergy = False):
     
-    #random.seed(10, CO H2O, H2, OH, O2, N2, NO, C3H8, H, O, N)
+    #['H', 'H2', 'O', 'O2', 'OH', 'H2O', 'HO2', 'H2O2', 'N2']
     n = random.random()*10
     
     if solveWithEnergy:
@@ -27,13 +27,21 @@ def genInitCon(solveWithEnergy = False):
     
     else:
         #CI = [2.870e-05*n, 0.1, 0.00062*n, 0.2*n, 4.42e-4*n, 0.86, 0.000001*n, 0.00001*n, 1.8809]
-        if H2Reac.phi < 1.02:
-            CI =[0.002717*n, 0.1, 0.00367782*n, 0.2327979*n, 0.000285*n, 0.9828002, 0.031395*n, 5.306e-12*n, 2.849]
-            #CI = [9.84e-04*n, 0.00156, 0.0003276*n, 0.28049*n, 0.00387*n, 0.9961, 0.00056*n, 2.26035517e-05*n, 2.93]
+        if H2Reac.phi < 1.01:
+            
+            n = random.uniform(0.1, 0.7)
+            n = round(n, 4)
+            CI = [0.00001, 0.00001*n, 0.00001, 0.4*n, 0.0001, 1.5*n, 0.000001, 0.0000001, 3*n]
+            #CI = [0.00013*n, 0.01, 0.000703*n, 0.2121*n, 0.0102*n, 0.9934, 7.74325e-05*n, 5.278e-05*n, 2.687]
+        elif H2Reac.phi >= 1.01 and H2Reac.phi < 1.15:
+            n = random.uniform(0.4, 1)
+            n = round(n, 4)
+            CI = [0.01, 0.1*n, 0.00001, 0.000001, 0.0001, 0.8*n, 0.000001, 0.0000001, 1.5*n]
         else:
-            #CI = [2.870e-05*n, 0.1, 0.00062*n, 0.2*n, 4.42e-4*n, 0.86, 0.000001*n, 0.00001*n, 1.8809]
-            CI = [2.6053e-06*n, 0.2308, 3.716e-05*n, 1.67e-07*n, 6.3883e-4*n, 0.76915, 2.51152e-06*n, 1.5388e-05*n, 1.4468]
-            #CI = [0.001147*n, 0.19967223, 1.92052e-06*n, 3.3413e-04*n, 0.0004743*n, 0.7995, 1.608e-05, 1.76e-05, 1.50]
+            n = random.uniform(0.1, 1)
+            n = round(n, 4)
+            CI = [0.01, 0.3*n, 0.00001, 0.000001, 0.0001, 0.8*n, 0.000001, 0.0000001, 1.3*n]
+            
     return CI
 
 def molarProdFrac(products):
@@ -45,7 +53,7 @@ def molarProdFrac(products):
         molarProdFrac.append(i/N_tot)
     return molarProdFrac
 
-def findSolution(reaction, epsilon = 1E-9):
+def findSolution(reaction, epsilon = 1E-10):
     """
      Function thats verify both the positive of all concentrations
      and the preservation of mass conservation.
@@ -101,8 +109,8 @@ H2Reac = Reaction()
 hydrogen = [0, 2, 0, 0]
 H2_name = 'H2'
 
-temperatura = 2000
-presion = 101.325*10
+temperatura = 1000
+presion = 101.325
 
 productNames = ['H', 'H2', 'O', 'O2', 'OH', 'H2O', 'HO2', 'H2O2', 'N2']
 

@@ -332,7 +332,14 @@ def cal_property(T, name, prop):
                 
     Ru = 8.31446261815324  # kJ/kmol K
     if prop == 'cp':
-        cp = Ru * (a1 + a2*T + a3*T**2 + a4*T**3 + a5*T**4)
+        
+        if name == 'H2O2' or name == 'HO2':
+            
+            t = T/1000
+            cp = A  + B * t  + C * (t**2) + D * (t**3) + E / (t**2)
+            
+        else: 
+            cp = Ru * (a1 + a2*T + a3*T**2 + a4*T**3 + a5*T**4)
         return cp
     
     elif prop == 'h':

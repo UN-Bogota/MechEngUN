@@ -13,6 +13,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from reactionObject import Reaction
 import sys
+import pandas as pd
 
 sys.setrecursionlimit(2000)
 
@@ -24,15 +25,17 @@ def genInitCon(solveWithEnergy = False):
     
     if solveWithEnergy:
         
-        if H2Reac.phi < 0.9:
+        if H2Reac.phi < 0.94:
             #CI =[0.002717*n, 0.1, 0.00367782*n, 0.2327979*n, 0.000285*n, 0.9828002, 0.031395*n, 5.306e-12*n, 2.849, 2000]
-            CI = [9.84e-04*n, 0.00156, 0.003276*n, 0.28049*n, 0.00387*n, 0.9961, 0.00056*n, 2.26035517e-05*n, 2.93, 1900]
+            #CI = [9.84e-04*n, 0.00156, 0.003276*n, 0.28049*n, 0.00387*n, 0.9961, 0.00056*n, 2.26035517e-05*n, 2.93, 1900]
             #CI = [0.0001197*n, 0.00479, 0.000215*n, 0.078*n, 1.72e-04*n, 0.9, 0.019*n, 0.00034*n, 2.5, 1900]
+            CI = [0.00013*n, 0.01, 0.000703*n, 0.2121*n, 0.0102*n, 0.9934, 7.74325e-05*n, 5.278e-05*n, 2.687, 1900]
+        
         else:
             #CI = [2.870e-05*n, 0.1, 0.00062*n, 0.2*n, 4.42e-4*n, 0.86, 0.000001*n, 0.00001*n, 1.8809]
             #CI = [2.6053e-06*n, 0.2308, 3.716e-05*n, 1.67e-07*n, 6.3883e-4*n, 0.76915, 2.51152e-06*n, 1.5388e-05*n, 1.4468, 2200]
             #CI = [0.001147*n, 0.19967223, 1.92052e-06*n, 3.3413e-04*n, 0.0004743*n, 0.7995, 1.608e-05, 1.76e-05, 1.50, 2200]
-            CI = [0.0057*n, 0.2, 1.724e-04*n, 1.33e-03*n, 0.0015*n, 0.8, 1.67e-05*n, 1.0551e-05*n, 1.5, 2200]    
+            CI = [0.0057*n, 0.1*n, 1.724e-04*n, 1.33e-03*n, 0.0015*n, 0.8, 1.67e-05*n, 1.0551e-05*n, 1.5, 2200]    
     else:
         #CI = [2.870e-05*n, 0.1, 0.00062*n, 0.2*n, 4.42e-4*n, 0.86, 0.000001*n, 0.00001*n, 1.8809]
         if H2Reac.phi < 1.02:
@@ -106,7 +109,7 @@ H2Reac = Reaction()
 hydrogen = [0, 2, 0, 0]
 H2_name = 'H2'
 
-presion = 101.325
+presion = 101.325*10
 
 productNames = ['H', 'H2', 'O', 'O2', 'OH', 'H2O', 'HO2', 'H2O2', 'N2']
 
@@ -181,15 +184,12 @@ fig.suptitle('Fracción molar en equilibrio a P = ' + str(presion) + ' kPa y tem
 
 plt.show()
 
-titles = ['$phi$', 'H', 'H2', 'O', 'O2', 'OH', 'H2O', 'HO2', 'H2O2', 'N2', '$T_ad$']
+#-------------------------------------------------------------------------------------------------------------------
 
+titles = ['$phi$', '$T_ad$', 'H', 'H2', 'O', 'O2', 'OH', 'H2O', 'HO2', 'H2O2', 'N2']
 result = np.hstack((adiaTemps, resul))
-result = np.hstack((phi.reshape(len(phi),1), resul))
+result = np.hstack((phi.reshape(len(phi),1), result))
 result = np.vstack((titles, result))
-
-input()
-import pandas as pd
-
 df = pd.DataFrame(result)
 filename = 'equlibrium_result_at_P_' + str(presion) + '_T_ad.csv'
 df.to_csv(filename, index=False)

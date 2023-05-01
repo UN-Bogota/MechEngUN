@@ -58,9 +58,9 @@ nupp = np.array([[0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
 
 
 T=1000 #K
-P=101325 #Pa
+P=101325 #kPa
 AR=1/0.42
-phi=1
+phi=0.5
 R=8.3144 #J/(mol*K)
 lab=['H2O2',' H2', 'O', 'O2', 'OH' ,'H2O', 'N2', 'HO2', 'H']
 
@@ -70,8 +70,8 @@ y0=y0*P/(R*T)
 y0=np.append(y0,[T,P])
 
 t0=0
-tf=5e-6
-dt=1e-12
+tf=1e-5
+dt=5e-12
 ecuaciones = kinetics(nup, nupp)
 ef = get_ef()
 ecuaciones.setEfficiency(ef)

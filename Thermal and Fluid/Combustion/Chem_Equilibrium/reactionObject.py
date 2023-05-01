@@ -395,12 +395,12 @@ class Reaction:
     def solveH2System(self, CI):
         
         if self.solveWithEnergy:
-            B, C, D, E, F, G, H, I, J, T =  fsolve(self.getH2Equations, CI, maxfev=5000)
+            B, C, D, E, F, G, H, I, J, T =  fsolve(self.getH2Equations, CI, maxfev=10000)
             self.n_salida_real = [B, C, D, E, F, G, H, I, J]
             return [B, C, D, E, F, G, H, I, J, T]
             
         else:
-            B, C, D, E, F, G, H, I, J =  fsolve(self.getH2Equations, CI, maxfev=5000)
+            B, C, D, E, F, G, H, I, J =  fsolve(self.getH2Equations, CI, maxfev=10000)
             self.n_salida_real = [B, C, D, E, F, G, H, I, J]
         
             return self.n_salida_real

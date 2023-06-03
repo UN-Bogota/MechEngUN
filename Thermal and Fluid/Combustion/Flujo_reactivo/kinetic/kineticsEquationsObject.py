@@ -8,7 +8,10 @@ import numpy as np
 from resources import *
 import properties as prop
 import ThProperties as Th
+
+
 class kinetics():
+    
     def __init__(self, nup, nupp):
         
         self.nup = nup
@@ -23,9 +26,11 @@ class kinetics():
         """
         cT=concentrations.T
         M = self.effiency@cT
+        
         return M.T
     def setT(self,T):
         self.T=T
+        
     def setReactorType(self, reactotType):
         self.reactorType = reactotType
         

@@ -10,7 +10,7 @@ L=1
 n=10
 dx=L/(n-1)
 especies=['','','','','','','']
-
+MW=['CH4',' O2', 'CO', 'H2O', 'CO2']
 def create_A(Y):
     l=len(especies)
     cells=n*(l+1)
@@ -18,7 +18,8 @@ def create_A(Y):
     C=np.zeros([cells,1])
     #Av=np.zeros([len(especies),len(especies)])
     for m in range(1,n):
-        MWm=1/(np.dot(Y, 1/MW))
+        index=[i*n+m  for i in range(l)]
+        MWm=1/(np.dot(Y[index], 1/MW))
         for i in range(l):
             #Término convectivo
             A[n*i+m,n*i+m]=rho*v/dx
@@ -37,8 +38,16 @@ def create_A(Y):
     for i in range(l):
         A[n*i,n*i]=1
         C[n*i]=x0[i]
-#Arreglar Y para que sea el valor en la celda
-#Añadir el código de solución
+        
+    Ys=np.linalg.solve(A, C)
+    return Ys
+
+def Sol():
+    while abs(np.amax(Y-Ys))>1e-6:
+        Y=Ys
+        Ys=create_A(Y)
+        
+#Acoplar con cinética (W)
 
         
 

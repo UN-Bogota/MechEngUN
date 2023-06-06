@@ -30,8 +30,9 @@ nup = np.array([[1, 3/2, 0, 0, 0],
                 [0, 0.5, 1, 0, 0],
                 [0, 0, 0, 0, 1]
                ])
+
                 #CH4 O2 CO H2O CO2
-nup = np.array([[0, 0, 0, 0, 0],
+nupp = np.array([[0, 0, 0, 0, 0],
                 [0, 0, 0, 0, 0],
                 [0, 0, 0, 0, 0]
                ])
@@ -39,10 +40,14 @@ nup = np.array([[0, 0, 0, 0, 0],
 
 
 T = 1500 #K
-P = 101.325 #Pa
+
+# la presion siempre en pascales
+
+P = 101325 #Pa
 AR = 1/0.42
 phi = 1
-R = 8.3144 #J/(mol*K)
+# Ru = 1,987 # [cal/mol.K]
+R = 8.31446261815324 # [J/mol.K]
 
 lab = ['CH4',' O2', 'CO', 'H2O', 'CO2']
 
@@ -51,12 +56,22 @@ lab = ['CH4',' O2', 'CO', 'H2O', 'CO2']
 ecuaciones = kinetics(nup, nupp)
 ecuaciones.setT(T)
 
-y0=np.array([0,1,0,0.21*AR/phi,0,0,0.79*AR/phi,0, 0])
-y0=y0/sum(y0)
-y0=y0*((P/101.325)/(T/1000))
+
+# Condiciones iniciales
+
+y0=np.array([1, 2, 0, 0, 0])
+
+#y0=y0/sum(y0)
+
+
+v_molar_CH4 = R*T/P # [m³/mol CH4]
+
+v_molar_CH4 = v_molar_CH4*1000 # [L/mol CH4]
+y0 = y0*(1/v_molar_CH4)
+
 t0=0
-tf=1e-4
-dt=1e-10
+tf=1
+dt=1e-6
 
 
 solution = ode('cvode', ecuaciones.getDiffEq, old_api=False).solve(
@@ -65,7 +80,7 @@ solution = ode('cvode', ecuaciones.getDiffEq, old_api=False).solve(
 
 V= P/(R*T)
 #sol=solution.values.y[:,]
-sol=np.divide(solution.values.y[:,0:9],np.sum(solution.values.y,axis=1).reshape(len(solution.values.t),1))
+sol=np.divide(solution.values.y[:,0:5],np.sum(solution.values.y,axis=1).reshape(len(solution.values.t),1))
 plt.figure(1)
 plt.plot(solution.values.t, solution.values.y*V)
 plt.legend(lab,loc='upper right')
@@ -74,7 +89,7 @@ plt.ylabel('Concentración [kmol/$m^3$]')
 plt.xlabel('tiempo [s]')
 
 plt.figure(2)
-plt.plot(solution.values.t, sol)
+plt.plot(solution.values.t[:4], sol[:4])
 plt.legend(lab,loc='upper right')
 plt.title('$\phi$ ='+str(phi)+', T = '+str(T)+' [K], P = '+str(P/101.325)+' [atm]')
 plt.ylabel('Fracción molar')

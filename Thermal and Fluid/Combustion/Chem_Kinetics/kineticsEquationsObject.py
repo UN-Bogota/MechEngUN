@@ -41,40 +41,31 @@ class kinetics():
     def getDiffEq(self,t, concentrations, omega):
         
         lab = ['CH4',' O2', 'CO', 'H2O', 'CO2']
-        #R = 8.31446261815324 # [J/mol.K]
-        R = 1.987207 # [cal/mol.K]
+        R = 8.31446261815324 # [J/mol.K]
         
         if self.reactorType == 'constant-volume':
             T=[concentrations[-2],concentrations[-1]]
             self.T=T[0]
             concentrations=concentrations[0:-2]
         #concentrations = concentrations/sum(concentrations)
-        
         concentrations = concentrations.reshape(1, len(concentrations))
         
         if self.effiency != None:
             con_M = self.get_M(concentrations)
             Mr=[con_M[0][4],con_M[0][5]]
-            self.k = k_values(self.T, Mr)
+            self.k = k_values(self.T,Mr)
             concentrations = np.concatenate((concentrations, con_M), axis=1)
-         
+            
         self.k = k_values_CH4_reduced(concentrations, self.T)
+        
         
         
         reac, conc = self.nup.shape
         
         q = np.array([[0]])
         
-        # Modificación para el mecanismo WD del metano
-                        #CH4 O2 CO H2O CO2
-        exp = np.array([[0.7, 0.8, 0, 0, 0],
-                        [0, 0, 1, 1, 0],
-                        [0, 0, 0, 0, 1]
-                       ])
         for i in range(reac):
-            
-            #prod_f = concentrations  ** self.nup[i, :]
-            prod_f = concentrations  ** exp[i, :]
+            prod_f = concentrations  ** self.nup[i, :]
             prod_r = concentrations  ** self.nupp[i, :]
             
             prod_f = np.prod(prod_f)
@@ -83,16 +74,12 @@ class kinetics():
             q_i = self.k[i, 0] * prod_f - self.k[i, 1] * prod_r
             
             q = np.append(q, [[q_i]], axis = 0)
-        
         q = np.delete(q, 0, 0)
-        
         self.nu = self.nupp-self.nup
-        print(nu)
         omega1 = q.T @ self.nu
-        
         omega2=omega1[0]
         
-        for i in range(len(concentrations)):
+        for i in range(9):
             omega[i]=omega2[i]
             
         if self.reactorType == 'constant-volume':
@@ -102,6 +89,7 @@ class kinetics():
             #print(len(concentrations[0]),len(cp_v))
             omega[9]=(R*T[0]*sum(omega[0:9])-h_i)/(np.dot(concentrations[0][0:9],(cp_v-R)))
             omega[10]=R*T[0]*sum(omega[0:9])+R*omega[9]*sum(concentrations[0][0:9])
+            
         #print(omega)
         #return omega #np array
     

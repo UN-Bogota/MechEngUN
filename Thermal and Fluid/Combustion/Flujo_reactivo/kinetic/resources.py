@@ -8,6 +8,26 @@ import numpy as np
 import math
 import properties as prop
 
+
+def k_values_CH4_reduced(concentraciones, T):
+    
+    
+    concentraciones = concentraciones[0]
+    Ru = 8.31446261815324 # [J/mol.K]
+    
+    
+    kf1 = (5E11) * np.exp(-47800/(Ru*T)) #* (concentraciones[0]**(0.7) * concentraciones[1]**(0.8))
+    kf2 = (2.24E12) * np.exp(-40700/(Ru*T)) #* (concentraciones[2] * concentraciones[3])
+    kf3 = (5E8) * np.exp(-40700/(Ru*T)) #* (concentraciones[4])
+    
+    K = np.zeros((3, 2))
+    
+    K[0, 0] = kf1
+    K[1, 0] = kf2
+    K[2, 0] = kf3
+    
+    return K
+
 def troe(k0,k,T,M):
     """
     Calcula la corrección de Troe para el coeficiente de cinética
@@ -22,7 +42,7 @@ def troe(k0,k,T,M):
     kf=k*(Pr/(1+Pr))*F
     return kf
 
-def k_values(T,M):
+def k_values(T, M=None):
     
     '''
     INPUT: Temperature [K], M siendo un vector con [M9,M15]
@@ -55,6 +75,9 @@ def k_values(T,M):
         '19': np.array([[1.000E+12, 0.00, 0.000E+00],[1.838E+10, 0.59, 3.089E+04]])
         }
     
+    if M == None: 
+        print('Recuerde definir las k especificas para su mecanismo y las eficiencias')
+        
     K = np.empty((19, 2))
     
     for key in constants:
@@ -99,3 +122,5 @@ def get_ef():
         i += 1
     
     return A
+
+

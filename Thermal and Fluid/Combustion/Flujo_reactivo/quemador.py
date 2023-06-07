@@ -6,6 +6,7 @@ Created on Tue Jun  6 17:43:46 2023
 @author: bojack
 """
 
+from scipy.special import erf
 
 def MBtu_hr_in2_to_W_mm2(value):
     
@@ -43,6 +44,7 @@ P = E_total/(tiempo*60) # kW
 
 
 max_GIR = MBtu_hr_in2_to_W_mm2(12.5)
+max_GIR = 10
 A_tot = P*1000/max_GIR # [mm2]
 
 
@@ -58,7 +60,13 @@ Q_tot = (massFlux_fuel+massFlux_air_pri)/rho_mean
 
 S = (1-porcentaje_air_pri)/(porcentaje_air_pri+(0.21/2))
 
+N = 50
+
+Q_tot_puerto = Q_tot/N
+
+Lf_exp = 1045*(Q_tot_puerto*(298.15/298.15))/(erf((1+S)**(-0.5)))**2
 
 
-
-
+Area = P/(max_GIR/1000)
+b = (A_tot/N)**(0.5)
+b1 = (Area/N)**(0.5)

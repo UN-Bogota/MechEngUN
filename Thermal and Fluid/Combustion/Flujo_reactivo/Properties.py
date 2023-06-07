@@ -164,7 +164,6 @@ def getMultiDiffCoef(concentraciones, especies, T, Pressure):
             MWj = getMW(especies[j])
             D[i, j] = concentraciones[i]*(MWmix/MWj)*(F[i, j] - F[i, i])
        
-    print(D)
     return D
 
     

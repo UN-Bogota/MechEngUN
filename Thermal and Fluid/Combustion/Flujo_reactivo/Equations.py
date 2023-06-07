@@ -40,8 +40,9 @@ rho=P/(Ru*T0)*MWm
 v=1 #m/s
 l=len(especies)
 def create_A(Y):
-    cells=n*(l+1)
-    T=Y[l*n:]
+    
+    cells = n*(l+1)
+    T = Y[l*n:]
     A = np.zeros([cells,cells])
     C = np.zeros([cells,1])
     A[n*l,n*l]=1
@@ -61,7 +62,7 @@ def create_A(Y):
             C[n*i+m] = np.dot(getW(rho*Y[index]*1/MW, T[m]).T,(1/MW))
             for j in range(l):
                 #Término difusivo
-                if not m==(n-1):
+                if not m == (n-1):
                     #No hay difusión en la salida
                     A[n*i+m,j*n+m]+=2*rho*MW[i]/(MWm*dx**2)*Dm[i,j]
                     A[n*i+m,j*n+m+1]+=-rho*MW[i]/(MWm*dx**2)*Dm[i,j]
@@ -81,11 +82,12 @@ def create_A(Y):
 def Sol():
     Y=np.array([])
     for i in range(l):
-        Y0=np.ones(n)*x0[i]
-        Y=np.concatenate((Y, Y0))
+        Y0=np.ones(n)*x0[i] # pone las condiciones iniciales para las concentraciones
+        Y=np.concatenate((Y, Y0)) #crea un vector de solucion
     Y0=np.ones(n)*T0
     Y=np.concatenate((Y, Y0))
     Y=np.array(Y)
+
     Ys=Y+1
     while abs(np.amax(Y-Ys))>1e-6:
         Y=Ys
@@ -94,7 +96,6 @@ def Sol():
         print(Ys)
     return Ys
 #Acoplar con cinética (W)
-
 
 
 def getW(concentraciones, T):

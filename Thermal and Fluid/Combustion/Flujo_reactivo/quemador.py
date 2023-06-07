@@ -6,7 +6,7 @@ Created on Tue Jun  6 17:43:46 2023
 @author: bojack
 """
 
-from scipy.special import erf
+from scipy.special import erfinv
 
 def MBtu_hr_in2_to_W_mm2(value):
     
@@ -25,7 +25,7 @@ rho_h2o = 997 #[kg/m³]
 vol = 2 #L
 tiempo = 5 #minutos
 eff = 0.3
-porcentaje_air_pri = 0.45 # por la tabla 8.25
+porcentaje_air_pri = 0.5 # por la tabla 8.25
 A_F_estoi = 17.1913
 
 
@@ -58,15 +58,22 @@ rho_mean = 1.083952
 
 Q_tot = (massFlux_fuel+massFlux_air_pri)/rho_mean
 
-S = (1-porcentaje_air_pri)/(porcentaje_air_pri+(0.21/2))
+S = (1-porcentaje_air_pri)/(porcentaje_air_pri+(1/9.52))
 
 N = 50
 
 Q_tot_puerto = Q_tot/N
-
-Lf_exp = 1045*(Q_tot_puerto*(298.15/298.15))/(erf((1+S)**(-0.5)))**2
-
+Q_F=0.65*massFlux_fuel
+Lf_exp = 1045*(Q_tot_puerto*(298.15/298.15))/(erfinv((1+S)**(-0.5)))**2
+#Lf_exp = 1045*(Q_F*(298.15/298.15))/(erfinv((1+S)**(-0.5)))**2
 
 Area = P/(max_GIR/1000)
 b = (A_tot/N)**(0.5)
 b1 = (Area/N)**(0.5)
+
+print('Flujo de combustible',Q_F*100**3,' cm3/s')
+print('Número de llamas' , N)
+print('Diámetro del quemador', 100 , 'mm')
+print('Arista',b,' mm')
+print('Aireación', porcentaje_air_pri*100 , ' %')
+print('Altura de la llama ', Lf_exp*100, ' cm')

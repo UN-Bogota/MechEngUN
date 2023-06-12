@@ -10,7 +10,7 @@ import numpy as np
 
 
 def cal_property(T, name, prop):
-    print(name)
+    #print(name,prop,T)
     if 290 <= T <= 1000:
     
         if name == 'CO':

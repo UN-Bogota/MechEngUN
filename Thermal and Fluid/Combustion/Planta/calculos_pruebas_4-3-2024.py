@@ -49,7 +49,7 @@ def perform_calc(df, boolean):
   # Exponential association for the generator y = a(1-exp(-bx))
   a, b = 0.7560299, 0.005690096
 
-  df.potencia_elec = (df.Vi*df.Ii + df.Vc*df.Ic + df.Vd*df.Id)/3/1000 # kW
+  df.potencia_elec = (df.Vi*df.Ii + df.Vc*df.Ic + df.Vd*df.Id)/1000 # kW
   df.eficiencia_gen = a*(1-np.exp(-b*1000*df.potencia_elec)) # -
   df.potencia_freno = df.potencia_elec/df.eficiencia_gen # kW
   df.bmep = (df.potencia_freno*nc)/(Vd*df.rpm/60) # kPa

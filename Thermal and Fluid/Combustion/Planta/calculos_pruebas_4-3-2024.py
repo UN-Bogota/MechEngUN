@@ -38,28 +38,38 @@ class df_to_object:
         self.t_inyeccion = df['t_inyeccion'] #ms
         self.flujo_masico = df['flujo_masico'] #g/s
 
-def perform_calc(df, boolean):
+def perform_calc(df, dual):
+    """
+    Args:
+        df (DataFrame): Containing the data related.
+        dual (Boolean): True if the process was releades with dual fuel, False in other case.
+    """
 
-  nc = 2.0 # Number of revolutions per work cycle
-  Vd = 406e-6 # Displaced Volume m3
-  rho_B10 = 838.00 # kg/m3
-  LHV_B10 = 46079.97 # kJ/kg
-  LHV_GNV = 42188.30 # kJ/m3
+    nc = 2.0 # Number of revolutions per work cycle
+    Vd = 406e-6 # Displaced Volume m3
+    rho_B10 = 838.00 # kg/m3
+    LHV_B10 = 46079.97 # kJ/kg
+    LHV_GNV = 42188.30 # kJ/m3
 
-  # Exponential association for the generator y = a(1-exp(-bx))
-  a, b = 0.7560299, 0.005690096
+    # Exponential association for the generator y = a(1-exp(-bx))
+    a, b = 0.7560299, 0.005690096
 
-  df.potencia_elec = (df.Vi*df.Ii + df.Vc*df.Ic + df.Vd*df.Id)/1000 # kW
-  df.eficiencia_gen = a*(1-np.exp(-b*1000*df.potencia_elec)) # -
-  df.potencia_freno = df.potencia_elec/df.eficiencia_gen # kW
-  df.bmep = (df.potencia_freno*nc)/(Vd*df.rpm/60) # kPa
-  
-  
-  #df.energia_calorifica1 = energia_calor_Diesel(LHV_B10, df.rpm, df.flujo_masico)
+    df.potencia_elec = (df.Vi*df.Ii + df.Vc*df.Ic + df.Vd*df.Id)/1000 # kW
+    df.eficiencia_gen = a*(1-np.exp(-b*1000*df.potencia_elec)) # -
+    df.potencia_freno = df.potencia_elec/df.eficiencia_gen # kW
+    df.bmep = (df.potencia_freno*nc)/(Vd*df.rpm/60) # kPa
 
-  #df.eff_termica1 =
+    df.energia_calorifica1 = dual*(df.flujo_vol_1/1000/60*df.t_iny/1000*LHV_GNV) + (df.flujo_masico/1000)*2*LHV_B10/(df.rpm/60)
 
-  return df
+    df.energia_calorifica2 = dual*(df.flujo_vol_2/1000/60*df.t_iny/1000*LHV_GNV) + (df.flujo_masico/1000)*2*LHV_B10/(df.rpm/60)
+
+    df.sustitucion1 = dual*(df.flujo_vol_1/1000/60*df.t_iny/1000*LHV_GNV)/df.energia_calorifica1
+    df.sustitucion2 = dual*(df.flujo_vol_2/1000/60*df.t_iny/1000*LHV_GNV)/df.energia_calorifica2
+
+    df.eff_termica1 = df.bmep/df.energia_calorifica1
+    df.eff_termica2 = df.bmep/df.energia_calorifica2
+
+    return df
 
 
 filename = '/workspaces/MechEngUN/Thermal and Fluid/Combustion/Planta/pruebas_lab.xlsx'
@@ -68,6 +78,4 @@ diesel = df_to_object(ExcelReader(filename, 'CH4_1', 43, 48, 'C:O').read_data())
 dual1 = df_to_object(ExcelReader(filename, 'CH4_1', 50, 55, 'C:O').read_data())
 dual2 = df_to_object(ExcelReader(filename, 'CH4_1', 57, 62, 'C:O').read_data())
 
-diesel = perform_calc(diesel, True)
-
-print(diesel.eficiencia_gen)
+diesel = perform_calc(diesel, False)

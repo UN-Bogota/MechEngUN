@@ -12,8 +12,8 @@ class ExcelReader:
 
     def read_data(self):
         try:
-            df = pd.read_excel(self.filename, self.sheet_name, skiprows=self.start_row, nrows=self.end_row - self.start_row + 1, usecols=self.columns_to_read)
-            return df
+            self.df = pd.read_excel(self.filename, self.sheet_name, skiprows=self.start_row, nrows=self.end_row - self.start_row + 1, usecols=self.columns_to_read)
+            return self.df
         except FileNotFoundError:
             print(f"Error: File '{self.filename}' not found.")
             return None
@@ -58,24 +58,27 @@ def perform_calc(df, dual):
     df.eficiencia_gen = a*(1-np.exp(-b*1000*df.potencia_elec)) # -
     df.potencia_freno = df.potencia_elec/df.eficiencia_gen # kW
     df.bmep = (df.potencia_freno*nc)/(Vd*df.rpm/60) # kPa
+    if dual:
+        df.energia_calorifica1 = (df.flujo_vol_1/1000/60*df.t_iny/1000*LHV_GNV) + (df.flujo_masico/1000)*2*LHV_B10/(df.rpm/60)
 
-    df.energia_calorifica1 = dual*(df.flujo_vol_1/1000/60*df.t_iny/1000*LHV_GNV) + (df.flujo_masico/1000)*2*LHV_B10/(df.rpm/60)
+        df.energia_calorifica2 = (df.flujo_vol_2/1000/60*df.t_iny/1000*LHV_GNV) + (df.flujo_masico/1000)*2*LHV_B10/(df.rpm/60)
 
-    df.energia_calorifica2 = dual*(df.flujo_vol_2/1000/60*df.t_iny/1000*LHV_GNV) + (df.flujo_masico/1000)*2*LHV_B10/(df.rpm/60)
+        df.sustitucion1 = dual*(df.flujo_vol_1/1000/60*df.t_iny/1000*LHV_GNV)/df.energia_calorifica1
+        df.sustitucion2 = dual*(df.flujo_vol_2/1000/60*df.t_iny/1000*LHV_GNV)/df.energia_calorifica2
+    else: 
+        df.energia_calorifica1 = (df.flujo_masico/1000)*2*LHV_B10/(df.rpm/60)
 
-    df.sustitucion1 = dual*(df.flujo_vol_1/1000/60*df.t_iny/1000*LHV_GNV)/df.energia_calorifica1
-    df.sustitucion2 = dual*(df.flujo_vol_2/1000/60*df.t_iny/1000*LHV_GNV)/df.energia_calorifica2
+        df.energia_calorifica2 = (df.flujo_masico/1000)*2*LHV_B10/(df.rpm/60)
 
     df.eff_termica1 = df.bmep/df.energia_calorifica1
     df.eff_termica2 = df.bmep/df.energia_calorifica2
-
     return df
 
 
-filename = '/workspaces/MechEngUN/Thermal and Fluid/Combustion/Planta/pruebas_lab.xlsx'
+filename = 'pruebas_lab.xlsx'
 
 diesel = df_to_object(ExcelReader(filename, 'CH4_1', 43, 48, 'C:O').read_data())
 dual1 = df_to_object(ExcelReader(filename, 'CH4_1', 50, 55, 'C:O').read_data())
 dual2 = df_to_object(ExcelReader(filename, 'CH4_1', 57, 62, 'C:O').read_data())
 
-diesel = perform_calc(diesel, False)
+diesel1 = perform_calc(diesel, False)

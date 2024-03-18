@@ -10,55 +10,18 @@ import pandas as pd
 import seaborn as sns
 from matplotlib.ticker import MultipleLocator
 
-class ExcelReader:
-    def __init__(self, filename, sheet_name, start_row, end_row, columns_to_read):
-        self.filename = filename
-        self.sheet_name = sheet_name
-        self.start_row = start_row
-        self.end_row = end_row
-        self.columns_to_read = columns_to_read
 
-    def read_data(self):
-        try:
-            self.df = pd.read_excel(self.filename, self.sheet_name, skiprows=self.start_row, nrows=self.end_row - self.start_row + 1, usecols=self.columns_to_read)
-            return self.df
-        except FileNotFoundError:
-            print(f"Error: File '{self.filename}' not found.")
-            return None
-        except Exception as e:
-            print(f"Error: {e}")
-            return None
-        
-# Create a class to represent the DataFrame as an object
-class df_to_object:
-    def __init__(self, df):
-        self.rpm = df['rpm'] #rpm
-        self.Vi = df['Vi'] #V
-        self.Vc = df['Vc'] #V
-        self.Vd = df['Vd'] #V
-        self.Ii = df['Ii'] #A
-        self.Ic = df['Ic'] #A
-        self.Id = df['Id'] #A
-        self.T_ingreso = df['T_ingreso'] #°C
-        self.P_ingreso = df['P_ingreso'] #psi
-        self.flujo_vol_1 = df['flujo_vol_1'] #lpm
-        self.flujo_vol_2 = df['flujo_vol_2'] #lpm
-        self.t_inyeccion = df['t_inyeccion'] #ms
-        self.flujo_masico = df['flujo_masico'] #g/s
-
-def perform_calc(df, dual):
-    """
-    Args:
-        df (DataFrame): Containing the data related.
-        dual (Boolean): True if the process was released with dual fuel, False in other case.
-    """
-
+def perform_calc(df):
+    
+    rho_s, P_s, T_s = 0.6569, 14.696, 25 + 273.15 # Condiciones estándar g/L, psia, K 
+    
+    R_CH4 = 0.51828 # kJ/kg K
     nc = 2.0 # Number of revolutions per work cycle
     Vd = 406e-6 # Displaced Volume m3
     rho_B10 = 838.00 # kg/m3
     LHV_B10 = 46079.97 # kJ/kg
     LHV_GNV = 42188.30 # kJ/m3
-    LHV_GNVm = 42619 #kJ/kg
+    LHV_GNVm = 42619.0 #kJ/kg
 
     # Exponential association for the generator y = a(1-exp(-bx))
     a, b = 0.7560299, 0.005690096
@@ -68,140 +31,160 @@ def perform_calc(df, dual):
     df['potencia_freno'] = df.potencia_elec/df.eficiencia_gen # kW
     df['bmep'] = (df.potencia_freno*nc)/(Vd*df.rpm/60) # kPa
     df['flujo_vol']=df[['flujo_vol_1', 'flujo_vol_2']].mean(axis=1)#L/min
+   
+    df['energía_Diesel'] = (df.flujo_masico/1000)*2*LHV_B10/(df.rpm/60)
     
+    df['densidad'] = rho_s*(T_s/(df.T_ingreso+273.15))*(df.P_ingreso/P_s) # kg/m3 Con correccion del manual
     
-    #if dual:
-    #df['energía_GNV']=(df.flujo_vol/1000/60*df.t_inyeccion/1000*LHV_GNV)
-    #df['energia_calorifica'] = (df.flujo_vol/1000/60*df.t_inyeccion/1000*LHV_GNV) + (df.flujo_masico/1000)*2*LHV_B10/(df.rpm/60)
-    df['energía_Diesel']=(df.flujo_masico/1000)*2*LHV_B10/(df.rpm/60)
-    df['energía_GNV']=df.t_inyeccion*2/1000/1000*LHV_GNVm*0.4
-    df['energia_calorifica'] = df['energía_Diesel']+df['energía_GNV']
-        #df['energia_calorifica2'] = (df.flujo_vol_2/1000/60*df.t_inyeccion/1000*LHV_GNV) + (df.flujo_masico/1000)*2*LHV_B10/(df.rpm/60)
+    df['flujo_m1'] = (df.flujo_vol_1/60000)*df.densidad # kg/s
+    df['flujo_m2'] = (df.flujo_vol_2/60000)*df.densidad # kg/s
+    
+    # df['flujo_m1'] = (df.P_ingreso*6.89476)*(df.flujo_vol_1/60000)/(R_CH4 * (df.T_ingreso + 273.15))
+    # df['flujo_m2'] = (df.P_ingreso*6.89476)*(df.flujo_vol_2/60000)/(R_CH4 * (df.T_ingreso + 273.15))
+    
+    df['energía_GNV1'] = (df.flujo_m1)*2*LHV_GNVm/(df.rpm/60)
+    df['energía_GNV2'] = (df.flujo_m2)*2*LHV_GNVm/(df.rpm/60)    
+    
+    df['energia_calorifica1'] = df['energía_Diesel'] + df['energía_GNV1']
+    df['energia_calorifica2'] = df['energía_Diesel'] + df['energía_GNV2']
+    df['energia_calorifica_avg'] = 100*df[['energia_calorifica1', 'energia_calorifica2']].mean(axis=1)
+    df['energia_calorifica_std'] = 100*df[['energia_calorifica1', 'energia_calorifica2']].std(axis=1)
 
-    df['sustitucion'] =  df['energía_GNV']/df['energia_calorifica']#(df.flujo_vol/1000/60*df.t_inyeccion/1000*LHV_GNV)/df.energia_calorifica
-        #df['sustitucion2'] = (df.flujo_vol_2/1000/60*df.t_inyeccion/1000*LHV_GNV)/df.energia_calorifica2
-    # else: 
-    #     df['energia_calorifica1'] = (df.flujo_masico/1000)*2*LHV_B10/(df.rpm/60)
-
-    #     df['energia_calorifica2'] = (df.flujo_masico/1000)*2*LHV_B10/(df.rpm/60)
+    df['sustitucion1'] =  df['energía_GNV1']/df['energia_calorifica1']
+    df['sustitucion2'] =  df['energía_GNV2']/df['energia_calorifica2']
+    df['sustitucion_avg'] = 100*df[['sustitucion1', 'sustitucion2']].mean(axis=1)
+    df['sustitucion_std'] = 100*df[['sustitucion1', 'sustitucion2']].std(axis=1)
     
-    df['eff_termica'] = df.bmep*Vd/df.energia_calorifica
-    df['flujo_energetico']=df.energia_calorifica/2*df.rpm #kJ/min
-    df['consumo_especifico']=(df['energía_GNV']/LHV_GNVm*1000+df['energía_Diesel']/LHV_B10*1000)/(df.bmep*Vd)*3600#g/kWh
-    #df['eff_termica2'] = df.bmep*Vd/df.energia_calorifica2
+    df['eff_termica1'] = df.bmep*Vd/df.energia_calorifica1
+    df['eff_termica2'] = df.bmep*Vd/df.energia_calorifica2
+    df['eff_termica_avg'] = 100*df[['eff_termica1', 'eff_termica2']].mean(axis=1)
+    df['eff_termica_std'] = 100*df[['eff_termica1', 'eff_termica2']].std(axis=1)
+
+    df['flujo_energetico1'] = df.energia_calorifica1/2*df.rpm #kJ/min
+    df['flujo_energetico2'] = df.energia_calorifica2/2*df.rpm #kJ/min
+    df['flujo_energetico_avg'] = df[['flujo_energetico1', 'flujo_energetico2']].mean(axis=1)
+    df['flujo_energetico_std'] = df[['flujo_energetico1', 'flujo_energetico2']].std(axis=1)
+    
+    df['consumo_especifico1'] = (df['energía_GNV1']/LHV_GNVm*1000+df['energía_Diesel']/LHV_B10*1000)/(df.bmep*Vd)*3600 #g/kWh
+    df['consumo_especifico2'] = (df['energía_GNV2']/LHV_GNVm*1000+df['energía_Diesel']/LHV_B10*1000)/(df.bmep*Vd)*3600 #g/kWh
+    df['consumo_especifico_avg'] = df[['consumo_especifico1', 'consumo_especifico2']].mean(axis=1)
+    df['consumo_especifico_std'] = df[['consumo_especifico1', 'consumo_especifico2']].std(axis=1)
 
     return df
 
-# Calculos --------------------------------------------------------------------
+# Lectura del df  -------------------------------------------------------------
 
 filename = 'pruebas_lab.xlsx'
-#filename = '/workspaces/MechEngUN/Thermal and Fluid/Combustion/Planta/pruebas_lab.xlsx'
 
-diesel = ExcelReader(filename, 'CH4_1',43, 48, 'C:O').read_data()
-dual1 = ExcelReader(filename, 'CH4_1', 50, 55, 'C:O').read_data()
-dual2 = ExcelReader(filename, 'CH4_1', 57, 62, 'C:O').read_data()
+df0 = pd.read_excel(filename, 'CH4_1', skiprows= 4, nrows= (41-6+1), usecols='A:R')
+df0['flujo_masico'] = ((df0.m_0-df0.m_60)/60 + (df0.m_0-df0.m_30)/30 + (df0.m_30-df0.m_60)/30)/3
 
-prueba2=pd.read_excel(filename, 'CH4_1', skiprows= 4, nrows= (41-6+1), usecols='A:R')
-prueba2['flujo_masico']=(prueba2.m_0-prueba2.m_60)/60
-prueba2 = perform_calc(prueba2, True)
+df0 = df0.drop(['m_0', 'm_30', 'm_60'], axis=1)
 
-diesel = perform_calc(diesel, False)
-dual1 = perform_calc(dual1, True)
-dual2 = perform_calc(dual2, True)
-
-# Graficas
-
-    # Eficiencia termica ------------------------------------------------------
-"""
-plt.figure(figsize=(8*1.5, 6*1.5))
-
-plt.plot(diesel.bmep, 100*diesel.eff_termica1, color = 'black', label='Diesel')
-
-dual1_eff_avg = 100*(dual1.eff_termica1 + dual1.eff_termica2)/2
-dual2_eff_avg = 100*(dual2.eff_termica1 + dual2.eff_termica2)/2
-
-plt.plot(dual1.bmep, dual1_eff_avg, color = 'blue', label='Dual1')
-#plt.fill_between(dual1.bmep, 100*dual1.eff_termica1, 100*dual1.eff_termica2,
-                 color='blue', alpha=0.2, label=None)
-
-plt.plot(dual2.bmep, dual2_eff_avg, color = 'red', label='Dual2')
-plt.fill_between(dual2.bmep, 100*dual2.eff_termica1, 100*dual2.eff_termica2,
-                 color='red', alpha=0.2, label=None)
-
-plt.xlabel('bmep [kPa]')
-plt.ylabel('Eficiencia térmica [%]')
-
-plt.legend(loc=2)
-plt.grid(True)  # Add grid lines
-
-# Show the plot
-plt.show(block = True)
+df = df0.groupby(['mapa', 'carga']).mean().reset_index()
+df_std = df0.groupby(['mapa', 'carga']).std().reset_index()
 
 
-    # Sustitucion -------------------------------------------------------------
-    
-plt.figure(figsize=(8*1.5, 6*1.5))
+# Calculos  -------------------------------------------------------------------
 
-dual1_sust_avg = 100*(dual1.sustitucion1 + dual1.sustitucion2)/2
-dual2_sust_avg = 100*(dual2.sustitucion1 + dual2.sustitucion2)/2
+df = perform_calc(df)
 
+dual_df = df[df['mapa'].isin(['Dual 1 CH4', 'Dual 2 CH4'])]
+diesel = df[df['mapa'].isin(['Diesel'])]
+dual1 = df[df['mapa'].isin(['Dual 1 CH4'])]
+dual2 = df[df['mapa'].isin(['Dual 2 CH4'])]
 
-plt.plot(dual1.bmep, dual1_sust_avg, color = 'blue', label='Dual1')
-plt.fill_between(dual1.bmep, 100*dual1.sustitucion1, 100*dual1.sustitucion2,
-                 color='blue', alpha=0.2, label=None)
-
-plt.plot(dual2.bmep, dual2_sust_avg, color = 'red', label='Dual2')
-plt.fill_between(dual2.bmep, 100*dual2.sustitucion1, 100*dual2.sustitucion2,
-                 color='red', alpha=0.2, label=None)
+w, h = 10, 6 # tamaño de las figuras
 
 
+# Fig1 - Porcentaje de sustitucion --------------------------------------------
 
-plt.xlabel('bmep [kPa]')
-plt.ylabel('Porcentaje de sustitución energética del Metano [%]')
-#plt.ylim([0,50])
-plt.legend(loc=2)
-plt.grid(True)  # Add grid lines
+fig, ax1 = plt.subplots(figsize=(w, h))
+fig1, fig11, fig12 = dual_df, dual1, dual2 # cambiar
 
+sns.lineplot(data=fig1, x='carga', y='sustitucion_avg', hue='mapa', palette=['blue', 'red'])
+ax1.fill_between(fig11['carga'], fig11.sustitucion_avg - fig11.sustitucion_std, fig11.sustitucion_avg + fig11.sustitucion_std, alpha=0.2, color='blue')
+ax1.fill_between(fig12['carga'], fig12.sustitucion_avg - fig12.sustitucion_std, fig12.sustitucion_avg + fig12.sustitucion_std, alpha=0.2, color='red')
 
+ax1.set(ylabel = 'Sustitución de $CH_4$ [ % ]')
+ax2 = ax1.twiny()
+sns.lineplot(data=fig1, x='bmep', y='eff_termica_avg', visible=False)
 plt.show()
-"""
-fig, ax1 = plt.subplots()
-sns.lineplot(data=prueba2,x='carga',y=100*prueba2['eff_termica'],hue='mapa')
-ax1.set(ylabel='%$\eta_b$')
+
+
+# Fig2 - Eficiencia termica ---------------------------------------------------
+
+fig, ax1 = plt.subplots(figsize=(w, h))
+fig1, fig11, fig12 = df, dual1, dual2 # cambiar
+
+sns.lineplot(data=fig1, x='carga', y='eff_termica_avg', hue='mapa', palette=['black', 'blue', 'red'])
+ax1.fill_between(fig11['carga'], fig11.eff_termica_avg - fig11.eff_termica_std, fig11.eff_termica_avg + fig11.eff_termica_std, alpha=0.2, color='blue')
+ax1.fill_between(fig12['carga'], fig12.eff_termica_avg - fig12.eff_termica_std, fig12.eff_termica_avg + fig12.eff_termica_std, alpha=0.2, color='red')
+
+ax1.set(ylabel = 'Eficiencia térmica al freno ($\eta_b$) [ % ]')
 ax2 = ax1.twiny()
-sns.lineplot(data=prueba2,x='bmep', y='eff_termica', visible=False)
+sns.lineplot(data=fig1, x='bmep', y='eff_termica_avg', visible=False)
+plt.show()
 
-fig, ax1 = plt.subplots()
-#prueba2['Sustitución']= prueba2[['sustitucion1', 'sustitucion2']].mean(axis=1)
-sns.lineplot(data=prueba2,x='carga',y=100*prueba2['sustitucion'],hue='mapa')
-ax1.set(ylabel='% Sustitución $CH_4$')
+
+# Fig3 - Flujo energetico -----------------------------------------------------
+
+fig, ax1 = plt.subplots(figsize=(w, h))
+fig1, fig11, fig12 = df, dual1, dual2 # cambiar
+
+sns.lineplot(data=fig1, x='carga', y='flujo_energetico_avg', hue='mapa', palette=['black', 'blue', 'red'])
+ax1.fill_between(fig11['carga'], fig11.flujo_energetico_avg - fig11.flujo_energetico_std, fig11.flujo_energetico_avg + fig11.flujo_energetico_std, alpha=0.2, color='blue')
+ax1.fill_between(fig12['carga'], fig12.flujo_energetico_avg - fig12.flujo_energetico_std, fig12.flujo_energetico_avg + fig12.flujo_energetico_std, alpha=0.2, color='red')
+
+ax1.set(ylabel = 'Flujo energético [ kJ / min ]')
 ax2 = ax1.twiny()
-sns.lineplot(data=prueba2,x='bmep', y='sustitucion', visible=False)
+sns.lineplot(data=fig1, x='bmep', y='flujo_energetico_avg', visible=False)
+plt.show()
 
-fig, ax1 = plt.subplots()
-sns.lineplot(data=prueba2,x='carga',y='flujo_energetico',hue='mapa')
-ax1.set(ylabel='Flujo energético [kJ/min]')
+
+# Fig4 - Consumo específico de combustible ------------------------------------
+
+fig, ax1 = plt.subplots(figsize=(w, h))
+fig1, fig11, fig12 = df, dual1, dual2 # cambiar
+
+sns.lineplot(data=fig1, x='carga', y='consumo_especifico_avg', hue='mapa', palette=['black', 'blue', 'red'])
+ax1.fill_between(fig11['carga'], fig11.consumo_especifico_avg - fig11.consumo_especifico_std, fig11.consumo_especifico_avg + fig11.consumo_especifico_std, alpha=0.2, color='blue')
+ax1.fill_between(fig12['carga'], fig12.consumo_especifico_avg - fig12.consumo_especifico_std, fig12.consumo_especifico_avg + fig12.consumo_especifico_std, alpha=0.2, color='red')
+
+ax1.set(title = '')
+ax1.set(ylabel = 'Consumo específico de combustible ($sfc$) [ g / kW-h ]')
 ax2 = ax1.twiny()
-sns.lineplot(data=prueba2,x='bmep', y='flujo_energetico', visible=False)
+sns.lineplot(data=fig1, x='bmep', y='consumo_especifico_avg', visible=False)
+plt.show()
 
-fig, ax1 = plt.subplots()
-sns.lineplot(data=prueba2,x='carga',y='consumo_especifico',hue='mapa')
-ax1.set(ylabel='Consumo específico [g/kW-h]')
+
+# Fig5 - Potencia al freno ----------------------------------------------------
+
+fig, ax1 = plt.subplots(figsize=(w, h))
+fig1 = df # cambiar
+
+sns.lineplot(data=fig1, x='carga', y='potencia_freno', hue='mapa', palette=['black', 'blue', 'red'])
+
+ax1.set(ylabel = 'Potencia al freno ($P_b$) [ kW ]')
 ax2 = ax1.twiny()
-sns.lineplot(data=prueba2,x='bmep', y='consumo_especifico', visible=False)
-
-#ax2.spines['top'].set_position(('axes', -0.15))
-#ax2.spines['top'].set_visible(False)
-plt.tick_params(which='both', top=False)
-
-fig, ax1 = plt.subplots()
-sns.lineplot(data=prueba2,x='carga',y='potencia_freno',hue='mapa')
-ax1.set(ylabel='Potencia al freno [kW]')
-ax2 = ax1.twiny()
-sns.lineplot(data=prueba2,x='bmep', y='potencia_freno', visible=False)
-
-fig, ax1 = plt.subplots()
-sns.lineplot(data=prueba2,x='carga',y='bmep',hue='mapa')
-ax1.set(ylabel='bmep [kPa]')
+sns.lineplot(data=fig1, x='bmep', y='potencia_freno', visible=False)
+plt.show()
 
 
+# FigX - Variable -------------------------------------------------------------
+
+# fig, ax1 = plt.subplots(figsize=(w, h))
+# fig1, fig11, fig12 = dual_df, dual1, dual2 # cambiar
+
+# sns.lineplot(data=fig1, x='carga', y='', hue='mapa', palette=['blue', 'red'])
+# ax1.fill_between(fig11['carga'], fig11. - fig11., fig11. + fig11., alpha=0.2, color='blue')
+# ax1.fill_between(fig12['carga'], fig12. - fig12., fig12. + fig12., alpha=0.2, color='red')
+
+# ax1.set(ylabel = 'X')
+# ax2 = ax1.twiny()
+# sns.lineplot(data=fig1, x='X', y='X', visible=False)
+# plt.show()
+
+# fig, ax1 = plt.subplots()
+# sns.lineplot(data=prueba2,x='carga',y='bmep',hue='mapa')
+# ax1.set(ylabel='bmep [kPa]')

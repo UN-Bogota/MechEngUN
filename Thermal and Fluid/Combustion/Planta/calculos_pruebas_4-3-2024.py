@@ -30,21 +30,23 @@ def perform_calc(df):
     df['eficiencia_gen'] = a*(1-np.exp(-b*1000*df.potencia_elec)) # -
     df['potencia_freno'] = df.potencia_elec/df.eficiencia_gen # kW
     df['bmep'] = (df.potencia_freno*nc)/(Vd*df.rpm/60) # kPa
-    df['flujo_vol']=df[['flujo_vol_1', 'flujo_vol_2']].mean(axis=1)#L/min
+    #df['flujo_vol']=df[['flujo_vol_1', 'flujo_vol_2']].mean(axis=1)#L/min
    
     df['energía_Diesel'] = (df.flujo_masico/1000)*2*LHV_B10/(df.rpm/60)
+    if 'flujo_vol_1' in df.keys():    
+        df['densidad'] = rho_s*(T_s/(df.T_ingreso+273.15))*(df.P_ingreso/P_s) # kg/m3 Con correccion del manual
     
-    df['densidad'] = rho_s*(T_s/(df.T_ingreso+273.15))*(df.P_ingreso/P_s) # kg/m3 Con correccion del manual
-    
-    df['flujo_m1'] = (df.flujo_vol_1/60000)*df.densidad # kg/s
-    df['flujo_m2'] = (df.flujo_vol_2/60000)*df.densidad # kg/s
-    
+        df['flujo_m1'] = (df.flujo_vol_1/60000)*df.densidad # kg/s
+        df['flujo_m2'] = (df.flujo_vol_2/60000)*df.densidad # kg/s
+    else:
+        df['densidad'] = rho_s
+        df['flujo_m1'] = (df.flujo_M_1/60000)*df.densidad # kg/s
+        df['flujo_m2'] = (df.flujo_M_2/60000)*df.densidad # kg/s
     # df['flujo_m1'] = (df.P_ingreso*6.89476)*(df.flujo_vol_1/60000)/(R_CH4 * (df.T_ingreso + 273.15))
     # df['flujo_m2'] = (df.P_ingreso*6.89476)*(df.flujo_vol_2/60000)/(R_CH4 * (df.T_ingreso + 273.15))
     
     df['energía_GNV1'] = (df.flujo_m1)*2*LHV_GNVm/(df.rpm/60)
     df['energía_GNV2'] = (df.flujo_m2)*2*LHV_GNVm/(df.rpm/60)    
-    
     df['energia_calorifica1'] = df['energía_Diesel'] + df['energía_GNV1']
     df['energia_calorifica2'] = df['energía_Diesel'] + df['energía_GNV2']
     df['energia_calorifica_avg'] = 100*df[['energia_calorifica1', 'energia_calorifica2']].mean(axis=1)
@@ -76,10 +78,10 @@ def perform_calc(df):
 
 filename = 'pruebas_lab.xlsx'
 
-df0 = pd.read_excel(filename, 'CH4_1', skiprows= 4, nrows= (41-6+1), usecols='A:R')
-df0['flujo_masico'] = ((df0.m_0-df0.m_60)/60 + (df0.m_0-df0.m_30)/30 + (df0.m_30-df0.m_60)/30)/3
+df0 = pd.read_excel(filename, 'CH4_2', skiprows= 4, nrows= (41-6+1), usecols='A:R')
+#df0['flujo_masico'] = ((df0.m_0-df0.m_60)/60 + (df0.m_0-df0.m_30)/30 + (df0.m_30-df0.m_60)/30)/3
 
-df0 = df0.drop(['m_0', 'm_30', 'm_60'], axis=1)
+#df0 = df0.drop(['m_0', 'm_30', 'm_60'], axis=1)
 
 df = df0.groupby(['mapa', 'carga']).mean().reset_index()
 df_std = df0.groupby(['mapa', 'carga']).std().reset_index()
@@ -118,8 +120,8 @@ fig, ax1 = plt.subplots(figsize=(w, h))
 fig1, fig11, fig12 = df, dual1, dual2 # cambiar
 
 sns.lineplot(data=fig1, x='carga', y='eff_termica_avg', hue='mapa', palette=['black', 'blue', 'red'])
-ax1.fill_between(fig11['carga'], fig11.eff_termica_avg - fig11.eff_termica_std, fig11.eff_termica_avg + fig11.eff_termica_std, alpha=0.2, color='blue')
-ax1.fill_between(fig12['carga'], fig12.eff_termica_avg - fig12.eff_termica_std, fig12.eff_termica_avg + fig12.eff_termica_std, alpha=0.2, color='red')
+#ax1.fill_between(fig11['carga'], fig11.eff_termica_avg - fig11.eff_termica_std, fig11.eff_termica_avg + fig11.eff_termica_std, alpha=0.2, color='blue')
+#ax1.fill_between(fig12['carga'], fig12.eff_termica_avg - fig12.eff_termica_std, fig12.eff_termica_avg + fig12.eff_termica_std, alpha=0.2, color='red')
 
 ax1.set(ylabel = 'Eficiencia térmica al freno ($\eta_b$) [ % ]')
 ax2 = ax1.twiny()

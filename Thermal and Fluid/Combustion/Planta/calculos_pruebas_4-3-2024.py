@@ -116,6 +116,8 @@ dual2_ = df_[df_['mapa'].isin(['Dual 2 CH4'])]
 
 w, h = 10, 6 # tamaño de las figuras
 
+texto = '_____ Prueba 3/3/2023 \n\n _ _ _ Prueba 21/3/2023 '
+
 # Fig1 - Porcentaje de sustitucion --------------------------------------------
 
 fig, ax1 = plt.subplots(figsize=(w, h))
@@ -127,9 +129,78 @@ sns.lineplot(data=fig1, x='carga', y='sustitucion_avg', hue='mapa', palette=['bl
 #ax1.fill_between(fig12['carga'], fig12.sustitucion_avg - fig12.sustitucion_std, fig12.sustitucion_avg + fig12.sustitucion_std, alpha=0.2, color='red')
 sns.lineplot(data=fig1_, x='carga', y='sustitucion_avg', hue='mapa', linestyle='dashed', palette=['blue', 'red'], legend=None)
 
-ax1.text(0.24*w, 3.6*h, '_____ Prueba 3/3/2023 \n\n _ _ _ Prueba 21/3/2023 ', fontsize=10, ha='center')
+#ax1.text(0.24*w, 3.6*h, texto, fontsize=10, ha='center')
 ax1.set(ylabel = 'Sustitución de $CH_4$ [ % ]')
+ax2 = ax1.twiny()
+sns.lineplot(data=fig1, x='bmep', y='sustitucion_avg', visible=False)
+plt.show()
+
+
+# Fig2 - Eficiencia termica ---------------------------------------------------
+
+fig, ax1 = plt.subplots(figsize=(w, h))
+fig1, fig11, fig12 = df, dual1, dual2 # cambiar
+fig1_, fig11_, fig12_ = df_, dual1_, dual2_ # cambiar
+
+sns.lineplot(data=fig1, x='carga', y='eff_termica_avg', hue='mapa', palette=['black', 'blue', 'red'])
+#ax1.fill_between(fig11['carga'], fig11.eff_termica_avg - fig11.eff_termica_std, fig11.eff_termica_avg + fig11.eff_termica_std, alpha=0.2, color='blue')
+#ax1.fill_between(fig12['carga'], fig12.eff_termica_avg - fig12.eff_termica_std, fig12.eff_termica_avg + fig12.eff_termica_std, alpha=0.2, color='red')
+sns.lineplot(data=fig1_, x='carga', y='eff_termica_avg', hue='mapa', linestyle='dashed', palette=['black', 'blue', 'red'], legend=None)
+
+#ax1.text(0.24*w, 3.6*h, texto, fontsize=10, ha='center')
+ax1.set(ylabel = 'Eficiencia térmica al freno ($\eta_{th,b}$) [ % ]')
 ax2 = ax1.twiny()
 sns.lineplot(data=fig1, x='bmep', y='eff_termica_avg', visible=False)
 plt.show()
 
+
+# Fig3 - Flujo energetico -----------------------------------------------------
+
+fig, ax1 = plt.subplots(figsize=(w, h))
+fig1, fig11, fig12 = df, dual1, dual2 # cambiar
+fig1_, fig11_, fig12_ = df_, dual1_, dual2_ # cambiar
+
+sns.lineplot(data=fig1, x='carga', y='flujo_energetico_avg', hue='mapa', palette=['black', 'blue', 'red'])
+#ax1.fill_between(fig11['carga'], fig11.flujo_energetico_avg - fig11.flujo_energetico_std, fig11.flujo_energetico_avg + fig11.flujo_energetico_std, alpha=0.2, color='blue')
+#ax1.fill_between(fig12['carga'], fig12.flujo_energetico_avg - fig12.flujo_energetico_std, fig12.flujo_energetico_avg + fig12.flujo_energetico_std, alpha=0.2, color='red')
+sns.lineplot(data=fig1_, x='carga', y='flujo_energetico_avg', hue='mapa', linestyle='dashed', palette=['black', 'blue', 'red'], legend=None)
+
+#ax1.text(0.24*w, 3.6*h, texto, fontsize=10, ha='center')
+ax1.set(ylabel = 'Flujo energético [ kJ / min ]')
+ax2 = ax1.twiny()
+sns.lineplot(data=fig1, x='bmep', y='flujo_energetico_avg', visible=False)
+plt.show()
+
+
+# Fig4 - Consumo específico de combustible ------------------------------------
+
+fig, ax1 = plt.subplots(figsize=(w, h))
+fig1, fig11, fig12 = df, dual1, dual2 # cambiar
+fig1_, fig11_, fig12_ = df_, dual1_, dual2_ # cambiar
+
+sns.lineplot(data=fig1, x='carga', y='consumo_especifico_avg', hue='mapa', palette=['black', 'blue', 'red'])
+#ax1.fill_between(fig11['carga'], fig11.consumo_especifico_avg - fig11.consumo_especifico_std, fig11.consumo_especifico_avg + fig11.consumo_especifico_std, alpha=0.2, color='blue')
+#ax1.fill_between(fig12['carga'], fig12.consumo_especifico_avg - fig12.consumo_especifico_std, fig12.consumo_especifico_avg + fig12.consumo_especifico_std, alpha=0.2, color='red')
+sns.lineplot(data=fig1_, x='carga', y='consumo_especifico_avg', hue='mapa', linestyle='dashed', palette=['black', 'blue', 'red'], legend=None)
+
+#ax1.text(2.4, 10, texto, fontsize=10, ha='center')
+ax1.set(ylabel = 'Consumo específico de combustible ($sfc$) [ g / kW-h ]')
+ax2 = ax1.twiny()
+sns.lineplot(data=fig1, x='bmep', y='consumo_especifico_avg', visible=False)
+plt.show()
+
+
+# Fig5 - Potencia al freno ----------------------------------------------------
+
+fig, ax1 = plt.subplots(figsize=(w, h))
+fig1 = df # cambiar
+fig1_ = df_ # cambiar
+
+sns.lineplot(data=fig1, x='carga', y='potencia_freno', hue='mapa', palette=['black', 'blue', 'red'])
+sns.lineplot(data=fig1_, x='carga', y='potencia_freno', hue='mapa', linestyle='dashed', palette=['black', 'blue', 'red'], legend=None)
+
+#ax1.text(2.4, 3.1, texto, fontsize=10, ha='center')
+ax1.set(ylabel = 'Potencia al freno ($P_b$) [ kW ]')
+ax2 = ax1.twiny()
+sns.lineplot(data=fig1, x='bmep', y='potencia_freno', visible=False)
+plt.show()

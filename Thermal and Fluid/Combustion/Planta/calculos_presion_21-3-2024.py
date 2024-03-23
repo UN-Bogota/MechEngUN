@@ -28,7 +28,7 @@ def create_df(folder_list):
     for csv_file in folder_list:
         #print(f'file --- {csv_file[-8:]}')
 
-        df = pd.read_csv(csv_file, names=col_names, header=0).T         
+        df = pd.read_csv(csv_file, names=col_names, header=0)         
         df['fuel'] = csv_file[-8:-6]
         df['load'] = int(csv_file[-5:-4])
         df['rpm'] = int(csv_file[-13:-9])
@@ -53,5 +53,18 @@ lon_biela = 0.117  #m
 carrera = 2*radio_ciguenal
 r = 14.58
 
+P_abs=dataframes.groupby(['fuel','load']).max()
+df_plot = P_abs['P_abs_cam'].to_frame().reset_index()
+sns.lineplot(data=df_plot,x='load',y='P_abs_cam',hue='fuel')
 
-df['Temperatura']=df['volumen']*df['P_abs']/1000/(287)
+#df_plot = P_abs['an'].to_frame().reset_index()
+#sns.lineplot(data=df_plot,x='load',y='P_abs_cam',hue='fuel')
+
+sns.relplot(
+    data=dataframes, x="angle", y="P_abs_cam",
+    col="load", hue="fuel",
+    kind="line",col_wrap=2)
+
+#sns.lineplot(data=dataframes,x='angle',y='P_abs_cam',hue='load',col='fuel')
+#sns.lineplot(P_abs['B8'],P_abs['D1'])
+

@@ -53,7 +53,7 @@ lon_biela = 0.117  #m
 carrera = 2*radio_ciguenal
 r = 14.58
 
-P_abs=dataframes.groupby(['fuel','load']).max()
+P_abs=dataframes.groupby(['fuel','load','rpm']).max()
 df_plot = P_abs['P_abs_cam'].to_frame().reset_index()
 sns.lineplot(data=df_plot,x='load',y='P_abs_cam',hue='fuel')
 

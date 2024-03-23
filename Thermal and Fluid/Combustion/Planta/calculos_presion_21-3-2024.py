@@ -63,8 +63,13 @@ sns.lineplot(data=df_plot,x='load',y='P_abs_cam',hue='fuel')
 sns.relplot(
     data=dataframes, x="angle", y="P_abs_cam",
     col="load", hue="fuel",
-    kind="line",col_wrap=2)
+    kind="scatter",col_wrap=2)
 
 #sns.lineplot(data=dataframes,x='angle',y='P_abs_cam',hue='load',col='fuel')
 #sns.lineplot(P_abs['B8'],P_abs['D1'])
-
+df_plot['angle']=0
+for i in range(len(df_plot)):
+    tem=dataframes[(dataframes['fuel']==df_plot['fuel'][i])*(dataframes['load']==df_plot['load'][i])*(dataframes['P_abs_cam']==df_plot['P_abs_cam'][i])]['angle'].to_numpy()
+    df_plot['angle'][i]=tem[0]
+    
+sns.lineplot(data=df_plot,x='load',y='angle',hue='fuel')

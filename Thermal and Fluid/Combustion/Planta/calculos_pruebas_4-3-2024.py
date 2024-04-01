@@ -204,3 +204,8 @@ ax1.set(ylabel = 'Potencia al freno ($P_b$) [ kW ]')
 ax2 = ax1.twiny()
 sns.lineplot(data=fig1, x='bmep', y='potencia_freno', visible=False)
 plt.show()
+
+#Caracterización inyector
+#sustitución=13.033 ln(t_iny)-1.751
+df_tot=pd.concat([df,df_],axis=0)
+sns.regplot(data=df_tot[df_tot['mapa']!='Diesel'],x='t_inyeccion',y='sustitucion_avg',logx=True,ci=95)

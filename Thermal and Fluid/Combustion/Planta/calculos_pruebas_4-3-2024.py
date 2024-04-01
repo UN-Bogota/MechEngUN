@@ -206,6 +206,10 @@ sns.lineplot(data=fig1, x='bmep', y='potencia_freno', visible=False)
 plt.show()
 
 #Caracterización inyector
-#sustitución=13.033 ln(t_iny)-1.751
 df_tot=pd.concat([df,df_],axis=0)
+t_iny=np.linspace(df_tot[df_tot['mapa']!='Diesel']['t_inyeccion'].min(),20,100)
+sus=13.033*np.log(t_iny)-1.751
 sns.regplot(data=df_tot[df_tot['mapa']!='Diesel'],x='t_inyeccion',y='sustitucion_avg',logx=True,ci=95)
+sns.lineplot(x=t_iny,y=sus)
+plt.show()
+sns.lmplot(data=df_tot[df_tot['mapa']!='Diesel'],x='t_inyeccion',y='sustitucion_avg',hue='carga',logx=True)

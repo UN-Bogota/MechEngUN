@@ -99,11 +99,8 @@ class Reaction:
                                           [0, 1, 1, 0], # OH
                                           [0, 0, 2, 0], # O2
                                           [0, 0, 0, 2], # N2
-                                          [0, 0, 1, 1], # NO
-                                          [3, 8, 0, 0], # C3H8
                                           [0, 1, 0, 0], # H
-                                          [0, 0, 1, 0], # O
-                                          [0, 0, 0, 1]  # N
+                                          [0, 0, 1, 0]  # O
                                           ])
         self.A_real = 1
         self.A_est = 1
@@ -114,7 +111,7 @@ class Reaction:
         self.Oxygen = None
         self.Nitrogen = None
         self.reactNames = []
-        self.productNames = ['CO2', 'CO', 'H2O', 'H2', 'OH', 'O2', 'N2', 'NO', 'C3H8', 'H', 'O', 'N']
+        self.productNames = ['CO2', 'CO', 'H2O', 'H2', 'OH', 'O2', 'N2', 'H', 'O']
         self.solveWithEnergy = False
         self.prodTemperature = None
         self.prodPressure = None
@@ -179,6 +176,23 @@ class Reaction:
     
     def addProductPressure(self, P):
         self.prodPressure = P
+
+    def get_h_prod(self, T=None):
+        
+        if T==None:
+            T = self.prodTemperature
+        cp = prop.cp(T, self.productNames)
+        h = cp*T
+        h_prod = np.dot(self.n_salida_real/sum(self.n_salida_real), h)
+        return h_prod
+    def get_cp_prod(self, T=None):
+        
+        if T==None:
+            T = self.prodTemperature
+        cp = prop.cp(T, self.productNames)
+        print(cp)
+        cp = np.dot(self.n_salida_real/sum(self.n_salida_real), cp)
+        return cp
         
     def getEquations(self, vars, Patm = 101.325):
         
@@ -201,57 +215,58 @@ class Reaction:
             falta el NO2
         """
         
+        #['CO2', 'CO', 'H2O', 'H2', 'OH', 'O2', 'N2', 'H', 'O']
         if self.solveWithEnergy:
-            B, C, D, E, F, G, H, I, J, K, L, M, T = vars
+            B, C, D, E, F, G, H, I, J, T = vars
         else:
-            B, C, D, E, F, G, H, I, J, K, L, M = vars
+            B, C, D, E, F, G, H, I, J = vars
         
-        n = B + C + D + E + F + G + H + I + J + K + L + M  
+        n = B + C + D + E + F + G + H + I + J
         f = (self.prodPressure/Patm)/n
         
-        if self.Carbon == None:
-            self.getTotalReacRealElements()
+        
+        #self.getTotalReacRealElements()
         
         # Todas se igualan a 0
         
         # Mass balance:
-        C_balance = B + C + 3*J - self.Carbon
-        H_balance = 2*D + 2*E + F + 8*J + K - self.Hydrogen
-        O_balance = 2*B + C + D + F + 2*G + I + L - self.Oxygen 
-        N_balance = 2*H + I + M - self.Nitrogen
+        C_balance = B + C - self.Carbon
+        H_balance = 2*D + 2*E + F + I - self.Hydrogen
+        O_balance = 2*B + C + D + F + 2*G + J - self.Oxygen 
+        N_balance = 2*H  - self.Nitrogen
         
         # There are all the ecuations names, please select all that apply.
         
         # ['H2_to_2H', 'O2_to_2O', 'N2_to_2N', 'O2-N2_to_NO', 'H2O_to_H2-O2', 
         #  'H2O_to_OH-H2', 'CO2_to_CO-O2','CO2-H2_to_CO-H2O']
+             
+        reactions = ['H2_to_2H', 'O2_to_2O', 'H2O_to_H2-O2', 'H2O_to_OH-H2', 'CO2-H2_to_CO-H2O']
         
         try:
-            kp_list = kp.kp_values(T)
+            kp_list = kp.kp_values(T, reactions)
+            
         except:
             if self.prodTemperature == None:
                 raise ValueError("Please add the product temperature")
                 
             else:
                 T = self.prodTemperature
-                kp_list = kp.kp_values(T)
-            
+                kp_list = kp.kp_values(T, reactions)
         
         # Equilibrium equations
         
-        eqn1 = (K**2) * f - kp_list[0]*E # H2_to_2H
-        eqn2 = L**2 * f - kp_list[1]*G # O2_to_2O
-        eqn3 = M**2 * f - kp_list[2]*H  # N2_to_2N
-        eqn4 = I**2 - kp_list[3]**2 * (G*H) #  O2-N2_to_NO
-        eqn5 = G * E**2 * f - (kp_list[4]*D)**2 # -- H2O_to_H2-O2
-        eqn6 = F**2 * E * f - (kp_list[5]*D)**2 # H2O_to_OH-H2
-        eqn7 = C**2 * G * f - (kp_list[6]*B)**2 # CO2_to_CO-O2
-        eqn8 = C*D - (E*B)*kp_list[7] # CO2-H2_to_CO-H2O
+        eqn1 = (I**2) * f - kp_list[0]*E # H2_to_2H
+        eqn2 = J**2 * f - kp_list[1]*G # O2_to_2O
         
+        eqn3 = G * E**2 * f - (kp_list[2]*D)**2 # H2O_to_H2-O2
+        eqn4 = F**2 * E * f - (D*kp_list[3])**2 # H2O_to_OH-H2
+        #eqn5 = C**2 * G * f - (kp_list[4]*B)**2 # CO2_to_CO-O2)
+        eqn5 = D*C - B*E*kp_list[4]
         # Energy equations
         
         if self.solveWithEnergy:
             
-            n_salida = np.array([B, C, D, E, F, G, H, I, J, K, L, M])
+            n_salida = np.array([B, C, D, E, F, G, H, I, J])
             
             h_com_reac = np.dot(self.n_entrada, prop.hf_reactivos(self.reactNames)) # Entalpía de combustion reactivos
             h_com_pro = np.dot(n_salida, prop.hf_productos(self.productNames)) #Entalpía de combustión productos
@@ -271,10 +286,10 @@ class Reaction:
             energyEq = LHS - deltaH_pro
             
             return [C_balance, H_balance, O_balance, N_balance, 
-                    eqn1, eqn2, eqn3, eqn4, eqn5, eqn6, eqn7, eqn8, energyEq]
+                    eqn1, eqn2, eqn3, eqn4, eqn5, energyEq]
         else:
             return [C_balance, H_balance, O_balance, N_balance, 
-                    eqn1, eqn2, eqn3, eqn4, eqn5, eqn6, eqn7, eqn8]
+                    eqn1, eqn2, eqn3, eqn4, eqn5]
         
     def getH2Equations(self, vars, Patm = 101.325):
         
@@ -282,24 +297,26 @@ class Reaction:
         Se usan las 4 ecuaciones de balance de masa y 8 de equilibrio para 
         encontrar cada coeficiente, los coeficientes corresponden a:
                     
-            B: H
-            C: H2
-            D: O
-            E: O2
-            F: OH
-            G: H2O
-            H: HO2
-            I: H2O2
-            J: N2
+            B: CO2
+            C: H2O
+            D: H2
+            E: OH
+            F: O2
+            G: N2
+            H: NO
+            I: C3H8
+            J: H
+            K: O
+            L: N
             
         """
-        
+        #['$phi$', '$T_ad$', 'CO2', 'H2O', 'H2', 'OH', 'O2', 'N2', 'NO', 'C3H8', 'H', 'O', 'N']
         if self.solveWithEnergy:
-            B, C, D, E, F, G, H, I, J, T = vars
+            B, C, D, E, F, G, H, I, J, K, L, T = vars
         else:
-            B, C, D, E, F, G, H, I, J = vars
+            B, C, D, E, F, G, H, I, J, K, L = vars
         
-        n = B + C + D + E + F + G + H + I + J
+        n = B + C + D + E + F + G + H + I + J + K + L
         
         f = (self.prodPressure/Patm)/n
         
@@ -382,25 +399,25 @@ class Reaction:
     def solveSystem(self, CI):
         
         if self.solveWithEnergy:
-            B, C, D, E, F, G, H, I, J, K, L, M, T =  fsolve(self.getEquations, CI)
-            self.n_salida_real = [B, C, D, E, F, G, H, I, J, K, L, M]
-            return [B, C, D, E, F, G, H, I, J, K, L, M, T]
+            B, C, D, E, F, G, H, I, J, T =  fsolve(self.getEquations, CI, maxfev=1000)
+            self.n_salida_real = [B, C, D, E, F, G, H, I, J]
+            
+            return [B, C, D, E, F, G, H, I, J, T]
             
         else:
-            B, C, D, E, F, G, H, I, J, K, L, M =  fsolve(self.getEquations, CI)
-            self.n_salida_real = [B, C, D, E, F, G, H, I, J, K, L, M]
-        
+            B, C, D, E, F, G, H, I, J =  fsolve(self.getEquations, CI, maxfev=100)
+            self.n_salida_real = [B, C, D, E, F, G, H, I, J]
             return self.n_salida_real
         
     def solveH2System(self, CI):
         
         if self.solveWithEnergy:
-            B, C, D, E, F, G, H, I, J, T =  fsolve(self.getH2Equations, CI, maxfev=10000)
+            B, C, D, E, F, G, H, I, J, T =  fsolve(self.getH2Equations, CI, maxfev=100000)
             self.n_salida_real = [B, C, D, E, F, G, H, I, J]
             return [B, C, D, E, F, G, H, I, J, T]
             
         else:
-            B, C, D, E, F, G, H, I, J =  fsolve(self.getH2Equations, CI, maxfev=10000)
+            B, C, D, E, F, G, H, I, J =  fsolve(self.getH2Equations, CI, maxfev=100000)
             self.n_salida_real = [B, C, D, E, F, G, H, I, J]
         
             return self.n_salida_real

@@ -99,10 +99,48 @@ def deltaH(T, elements):
             deltaH_values.append(value)
             
         except UnboundLocalError:
-            print('Se putio con ', i, 'a T= ', T)
-            return np.zeros(len(elements))
+            #print('Se putio con ', i, 'a T= ', T)
+            return np.zeros(len(elements))            
+            if T < 290:    
+                return np.zeros(len(elements))
+            elif T >5000:
+                
+                if i == 'H2O2' or i == 'HO2':
+                    value = Th.cal_property(5000, i, 'h')    
+                else: 
+                    return np.zeros(len(elements))
+                
+                deltaH_values.append(value)
         
     return np.array(deltaH_values)
+
+def cp(T, elements):
+    
+    cp_values = []
+    
+    for i in elements:
+        try:
+            if i == 'H2O2' or i == 'HO2':
+                value = Th.cal_property(T, i, 'cp')    
+            else: 
+                value = Th.cal_property(T, i, 'cp')
+            
+            cp_values.append(value)
+            
+        except UnboundLocalError:
+            print('Se putio con ', i, 'a T= ', T)
+            if T < 290:    
+                return np.zeros(len(elements))
+            elif T >5000:
+                
+                if i == 'H2O2' or i == 'HO2':
+                    value = Th.cal_property(5000, i, 'cp')    
+                else: 
+                    value = Th.cal_property(5000, i, 'cp') 
+                
+                cp_values.append(value)
+        
+    return np.array(cp_values)
 
 def calcT(cte, n, epsilon = 100):
     delta = 1000

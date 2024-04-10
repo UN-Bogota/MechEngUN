@@ -100,3 +100,4 @@ metanoReac.addFirstLaw(True)
 
 sol = findSolution(metanoReac)
 print(sol)
+

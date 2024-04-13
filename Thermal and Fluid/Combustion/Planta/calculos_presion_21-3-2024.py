@@ -38,7 +38,8 @@ def create_df(folder_list):
         #print(f'{df}')
 
     return combined_df
-
+def PolyArea(x,y):
+    return 0.5*np.abs(np.dot(x,np.roll(y,1))-np.dot(y,np.roll(x,1)))
 # Start of the code ------------------------------------------------
 
 
@@ -46,12 +47,12 @@ local_storage_directory = 'Mar21-2024/' #change depending of your storage locati
 filenames = list_files(local_storage_directory)
 
 dataframes1 = create_df(filenames)
-dataframes1['prueba']=1
+dataframes1['prueba']=2
 local_storage_directory = 'Abril 5 2024/'
 filenames = list_files(local_storage_directory)
 
 dataframes2 = create_df(filenames)
-dataframes2['prueba']=2
+dataframes2['prueba']=3
 dataframes=pd.concat([dataframes1,dataframes2],axis=0).reset_index()
 #print(dataframes)
 
@@ -81,5 +82,31 @@ for i in range(len(df_plot)):
     tem=dataframes[(dataframes['fuel']==df_plot['fuel'][i])*(dataframes['load']==df_plot['load'][i])*(dataframes['P_abs_cam']==df_plot['P_abs_cam'][i])]['angle'].to_numpy()
     df_plot['angle'][i]=tem[0]
 plt.xlim([-50,100])
-# plt.figure()
+# variables indicadas ------------------------------------------------
+df_plot['p_ind']=0
+for i in [1,2,3,4,5,6]:
+    for j in ['B8','D1','D2']:
+        for m in [2,3]:
+            a=dataframes[(dataframes['load']==i)*(dataframes['fuel']==j)*(dataframes['prueba']==m)]
+            for k in a['rpm'].unique():
+                x=a[a['rpm']==k]['volume']
+                y=a[a['rpm']==k]['P_abs_cam']
+                p_ind=PolyArea(x,y)
+                index=df_plot[(df_plot['load']==i)*(df_plot['fuel']==j)*(df_plot['rpm']==k)*(df_plot['prueba']==m)].index.values.astype(int)[0]
+                df_plot['p_ind'][index]=p_ind
+
+#df_plot['variable']='indicada'
+#df_plot=pd.concat[[df_plot,df],axis=0]
+
+
+plt.figure()
+sns.relplot(
+    data=df_plot, x="load", y="p_ind",
+    col="fuel", style='prueba',
+    kind="line",col_wrap=1)
+ax2 = ax1.twiny()
+sns.lineplot(data=df, x='bmep', y='consumo_especifico_avg', visible=False)
+plt.show()
+#sns.lineplot(data=df_plot, x='load', y='p_ind', hue='fuel',style='prueba')
+
 # sns.lineplot(data=df_plot, x='load', y='angle', hue='fuel')

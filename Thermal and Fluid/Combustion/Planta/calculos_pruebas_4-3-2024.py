@@ -51,8 +51,8 @@ def perform_calc(df):
     df['energía_GNV2'] = (df.flujo_m2)*2*LHV_GNVm/(df.rpm/60)    
     df['energia_calorifica1'] = df['energía_Diesel'] + df['energía_GNV1']
     df['energia_calorifica2'] = df['energía_Diesel'] + df['energía_GNV2']
-    df['energia_calorifica_avg'] = 100*df[['energia_calorifica1', 'energia_calorifica2']].mean(axis=1)
-    df['energia_calorifica_std'] = 100*df[['energia_calorifica1', 'energia_calorifica2']].std(axis=1)
+    df['energia_calorifica_avg'] = df[['energia_calorifica1', 'energia_calorifica2']].mean(axis=1)
+    df['energia_calorifica_std'] = df[['energia_calorifica1', 'energia_calorifica2']].std(axis=1)
 
     df['sustitucion1'] =  df['energía_GNV1']/df['energia_calorifica1']
     df['sustitucion2'] =  df['energía_GNV2']/df['energia_calorifica2']
@@ -248,3 +248,7 @@ sns.scatterplot(x=dual_df['t_inyeccion'],y=y_error)
 # sm.qqplot(dual_df['sustitucion_avg'], line='s')
 # plt.title("Y distribution")
 # plt.show()
+plt.figure()
+sns.lineplot(data=df, x="carga", y='energia_calorifica_avg',hue='mapa',style='prueba')
+ax2 = ax1.twiny()
+sns.lineplot(data=df_plot, x="load", y="p_ind",hue="fuel", style='prueba')

@@ -27,11 +27,12 @@ def create_df(folder_list):
        
     for csv_file in folder_list:
         #print(f'file --- {csv_file[-8:]}')
-
+        
+        #print(csv_file)
         df = pd.read_csv(csv_file, names=col_names, header=0)         
-        df['fuel'] = csv_file[-8:-6]
-        df['load'] = int(csv_file[-5:-4])
-        df['rpm'] = int(csv_file[-13:-9])
+        df['fuel'] = csv_file[14+len(local_storage_directory):16+len(local_storage_directory)]
+        df['load'] = int(csv_file[17+len(local_storage_directory):18+len(local_storage_directory)])
+        df['rpm'] = int(csv_file[9+len(local_storage_directory):13+len(local_storage_directory)])
         
         combined_df = pd.concat([combined_df, df], axis=0)  
         #print(f'{df}')
@@ -40,10 +41,18 @@ def create_df(folder_list):
 
 # Start of the code ------------------------------------------------
 
+
 local_storage_directory = 'Mar21-2024/' #change depending of your storage location
 filenames = list_files(local_storage_directory)
 
-dataframes = create_df(filenames)
+dataframes1 = create_df(filenames)
+dataframes1['prueba']=1
+local_storage_directory = 'Abril 5 2024/'
+filenames = list_files(local_storage_directory)
+
+dataframes2 = create_df(filenames)
+dataframes2['prueba']=2
+dataframes=pd.concat([dataframes1,dataframes2],axis=0).reset_index()
 #print(dataframes)
 
 # caracterización de la planta
@@ -53,15 +62,15 @@ lon_biela = 0.117  #m
 carrera = 2*radio_ciguenal
 r = 14.58
 
-P_abs=dataframes.groupby(['fuel','load','rpm']).max()
+P_abs=dataframes.groupby(['fuel','load','rpm','prueba']).max()
 df_plot = P_abs['P_abs_cam'].to_frame().reset_index()
-sns.lineplot(data=df_plot,x='load',y='P_abs_cam',hue='fuel')
+sns.lineplot(data=df_plot,x='load',y='P_abs_cam',hue='fuel',style='prueba')
 
 #df_plot = P_abs['an'].to_frame().reset_index()
 #sns.lineplot(data=df_plot,x='load',y='P_abs_cam',hue='fuel')
 
 sns.relplot(
-    data=dataframes, x="angle", y="P_abs_cam",
+    data=dataframes2, x="angle", y="P_abs_cam",
     col="load", hue="fuel",
     kind="scatter",col_wrap=2)
 
@@ -71,5 +80,6 @@ df_plot['angle']=0
 for i in range(len(df_plot)):
     tem=dataframes[(dataframes['fuel']==df_plot['fuel'][i])*(dataframes['load']==df_plot['load'][i])*(dataframes['P_abs_cam']==df_plot['P_abs_cam'][i])]['angle'].to_numpy()
     df_plot['angle'][i]=tem[0]
-    
-sns.lineplot(data=df_plot,x='load',y='angle',hue='fuel')
+plt.xlim([-50,100])
+# plt.figure()
+# sns.lineplot(data=df_plot, x='load', y='angle', hue='fuel')

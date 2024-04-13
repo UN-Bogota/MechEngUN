@@ -8,7 +8,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import pandas as pd
 import seaborn as sns
-import statsmodels.api as sm
+#import statsmodels.api as sm
 from matplotlib.ticker import MultipleLocator
 
 
@@ -240,11 +240,11 @@ sus_pred=a1[0]*np.log(dual_df['t_inyeccion'])+a1[1]
 y_error=sus_pred-dual_df['sustitucion_avg']
 sns.scatterplot(x=dual_df['t_inyeccion'],y=y_error)
 
-#Revisión de normalidad
-sm.qqplot(dual_df['t_inyeccion'], line='s')
-plt.title("X distribution")
-plt.show()
+# #Revisión de normalidad
+# sm.qqplot(dual_df['t_inyeccion'], line='s')
+# plt.title("X distribution")
+# plt.show()
 
-sm.qqplot(dual_df['sustitucion_avg'], line='s')
-plt.title("Y distribution")
-plt.show()
+# sm.qqplot(dual_df['sustitucion_avg'], line='s')
+# plt.title("Y distribution")
+# plt.show()
